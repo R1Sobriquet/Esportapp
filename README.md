@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![GameConnect Logo](https://via.placeholder.com/200x80/3B82F6/FFFFFF?text=GameConnect)
+![GameConnect Logo]([https://via.placeholder.com/200x80/3B82F6/FFFFFF?text=GameConnect](https://media.istockphoto.com/id/1560833158/fr/photo/contr%C3%B4leur-de-jeu-avec-clavier-%C3%A9clair%C3%A9-violet-au-milieu-de-divers-appareils-sans-fil.jpg?s=1024x1024&w=is&k=20&c=CnoqqQkITt9i0rfHQDaR-x9078NzTnPn9zlgBqWt3wc=))
 
 [![PHP Version](https://img.shields.io/badge/PHP-8.0%2B-777BB4?style=flat-square&logo=php)](https://php.net/)
 [![React](https://img.shields.io/badge/React-18.2-61DAFB?style=flat-square&logo=react)](https://reactjs.org/)
