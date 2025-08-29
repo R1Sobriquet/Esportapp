@@ -1,0 +1,493 @@
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../src/contexts/AuthContext';
+import { profileAPI, gamesAPI } from '../src/services/api';
+
+export default function Profile() {
+  const { user } = useAuth();
+  const [profile, setProfile] = useState(null);
+  const [games, setGames] = useState([]);
+  const [allGames, setAllGames] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [editForm, setEditForm] = useState({});
+
+  const skillLevels = ['beginner', 'intermediate', 'advanced', 'expert'];
+  const lookingForOptions = ['teammates', 'mentor', 'casual_friends', 'competitive_team'];
+  const visibilityOptions = ['public', 'friends', 'private'];
+  const gameModes = ['competitive', 'casual', 'any'];
+  const playtimes = ['morning', 'afternoon', 'evening', 'night', 'any'];
+
+  useEffect(() => {
+    if (user) {
+      loadProfile();
+      loadAllGames();
+    }
+  }, [user]);
+
+  const loadProfile = async () => {
+    try {
+      const response = await profileAPI.getProfile();
+      setProfile(response.data.profile);
+      setGames(response.data.games);
+      setEditForm({
+        ...response.data.profile,
+        preferences: response.data.preferences
+      });
+    } catch (error) {
+      console.error('Failed to load profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadAllGames = async () => {
+    try {
+      const response = await gamesAPI.getAllGames();
+      setAllGames(response.data);
+    } catch (error) {
+      console.error('Failed to load games:', error);
+    }
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    
+    if (name.startsWith('preferences.')) {
+      const prefKey = name.split('.')[1];
+      setEditForm(prev => ({
+        ...prev,
+        preferences: {
+          ...prev.preferences,
+          [prefKey]: type === 'checkbox' 
+            ? (checked 
+                ? [...(prev.preferences[prefKey] || []), value]
+                : (prev.preferences[prefKey] || []).filter(v => v !== value))
+            : value
+        }
+      }));
+    } else {
+      setEditForm(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      }));
+    }
+  };
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+
+    try {
+      await profileAPI.updateProfile(editForm);
+      await loadProfile();
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+      alert('Failed to update profile: ' + (error.response?.data?.error || error.message));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addGameToProfile = async (gameId) => {
+    try {
+      await gamesAPI.addUserGame({
+        game_id: gameId,
+        skill_level: 'beginner',
+        is_favorite: false
+      });
+      await loadProfile();
+    } catch (error) {
+      console.error('Failed to add game:', error);
+      alert('Failed to add game: ' + (error.response?.data?.error || error.message));
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl mb-4">Profile not found</h2>
+          <p className="text-gray-400">There was an error loading your profile.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white">
+      <div className="container mx-auto px-4 py-8">
+        {/* Profile Header */}
+        <div className="bg-gray-800 rounded-lg p-6 mb-8">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-6">
+              <img
+                src={profile.avatar_url || '/default-avatar.png'}
+                alt={profile.username || 'User'}
+                className="w-24 h-24 rounded-full"
+              />
+              <div>
+                <h1 className="text-3xl font-bold">
+                  {profile.first_name || profile.last_name 
+                    ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim()
+                    : profile.username
+                  }
+                </h1>
+                <p className="text-gray-400">@{profile.username}</p>
+                <div className="flex gap-4 mt-2">
+                  <span className="px-3 py-1 bg-blue-600 rounded-full text-sm">
+                    {profile.skill_level}
+                  </span>
+                  <span className="px-3 py-1 bg-green-600 rounded-full text-sm">
+                    Looking for {profile.looking_for}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsEditing(!isEditing)}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+            >
+              {isEditing ? 'Cancel' : 'Edit Profile'}
+            </button>
+          </div>
+          
+          {profile.bio && (
+            <div className="mt-4">
+              <p className="text-gray-300">{profile.bio}</p>
+            </div>
+          )}
+        </div>
+
+        {isEditing ? (
+          /* Edit Form */
+          <form onSubmit={handleSaveProfile} className="bg-gray-800 rounded-lg p-6 mb-8">
+            <h2 className="text-2xl font-bold mb-6">Edit Profile</h2>
+            
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  name="first_name"
+                  value={editForm.first_name || ''}
+                  onChange={handleEditChange}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  name="last_name"
+                  value={editForm.last_name || ''}
+                  onChange={handleEditChange}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Avatar URL
+                </label>
+                <input
+                  type="url"
+                  name="avatar_url"
+                  value={editForm.avatar_url || ''}
+                  onChange={handleEditChange}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Location
+                </label>
+                <input
+                  type="text"
+                  name="location"
+                  value={editForm.location || ''}
+                  onChange={handleEditChange}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Timezone
+                </label>
+                <input
+                  type="text"
+                  name="timezone"
+                  value={editForm.timezone || ''}
+                  onChange={handleEditChange}
+                  placeholder="e.g., America/New_York"
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Discord Username
+                </label>
+                <input
+                  type="text"
+                  name="discord_username"
+                  value={editForm.discord_username || ''}
+                  onChange={handleEditChange}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Steam ID
+                </label>
+                <input
+                  type="text"
+                  name="steam_id"
+                  value={editForm.steam_id || ''}
+                  onChange={handleEditChange}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Skill Level
+                </label>
+                <select
+                  name="skill_level"
+                  value={editForm.skill_level || 'beginner'}
+                  onChange={handleEditChange}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+                >
+                  {skillLevels.map(level => (
+                    <option key={level} value={level}>
+                      {level.charAt(0).toUpperCase() + level.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Looking For
+                </label>
+                <select
+                  name="looking_for"
+                  value={editForm.looking_for || 'teammates'}
+                  onChange={handleEditChange}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+                >
+                  {lookingForOptions.map(option => (
+                    <option key={option} value={option}>
+                      {option.replace('_', ' ').charAt(0).toUpperCase() + option.replace('_', ' ').slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Bio
+              </label>
+              <textarea
+                name="bio"
+                rows={3}
+                value={editForm.bio || ''}
+                onChange={handleEditChange}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+                placeholder="Tell others about yourself and your gaming style..."
+              />
+            </div>
+            
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold mb-4">Preferences</h3>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Preferred Game Modes
+                  </label>
+                  <div className="space-y-2">
+                    {gameModes.map(mode => (
+                      <label key={mode} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          name="preferences.game_modes"
+                          value={mode}
+                          checked={(editForm.preferences?.game_modes || []).includes(mode)}
+                          onChange={handleEditChange}
+                          className="mr-2"
+                        />
+                        <span className="capitalize">{mode}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Preferred Play Times
+                  </label>
+                  <div className="space-y-2">
+                    {playtimes.map(time => (
+                      <label key={time} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          name="preferences.playtimes"
+                          value={time}
+                          checked={(editForm.preferences?.playtimes || []).includes(time)}
+                          onChange={handleEditChange}
+                          className="mr-2"
+                        />
+                        <span className="capitalize">{time}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-6 flex gap-4">
+              <button
+                type="submit"
+                disabled={saving}
+                className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsEditing(false)}
+                className="px-6 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        ) : (
+          /* Display Mode */
+          <div className="space-y-8">
+            {/* Profile Details */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h2 className="text-2xl font-bold mb-6">Profile Details</h2>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                {profile.location && (
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">
+                      Location
+                    </h3>
+                    <p className="mt-1">{profile.location}</p>
+                  </div>
+                )}
+                
+                {profile.timezone && (
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">
+                      Timezone
+                    </h3>
+                    <p className="mt-1">{profile.timezone}</p>
+                  </div>
+                )}
+                
+                {profile.discord_username && (
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">
+                      Discord
+                    </h3>
+                    <p className="mt-1">{profile.discord_username}</p>
+                  </div>
+                )}
+                
+                {profile.steam_id && (
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">
+                      Steam ID
+                    </h3>
+                    <p className="mt-1">{profile.steam_id}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Games */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">My Games</h2>
+                <select
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      addGameToProfile(parseInt(e.target.value));
+                      e.target.value = '';
+                    }
+                  }}
+                  className="px-3 py-1 bg-gray-700 border border-gray-600 rounded-md text-white text-sm"
+                >
+                  <option value="">Add Game</option>
+                  {allGames
+                    .filter(game => !games.find(g => g.id === game.id))
+                    .map(game => (
+                      <option key={game.id} value={game.id}>
+                        {game.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              
+              {games.length > 0 ? (
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {games.map(game => (
+                    <div key={game.id} className="p-4 bg-gray-700 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold">{game.name}</h3>
+                        {game.is_favorite && <span className="text-yellow-400">⭐</span>}
+                      </div>
+                      <p className="text-sm text-gray-400">{game.category}</p>
+                      <div className="mt-2 space-y-1">
+                        <p className="text-sm">
+                          <span className="text-gray-400">Skill:</span> {game.skill_level}
+                        </p>
+                        {game.rank && (
+                          <p className="text-sm">
+                            <span className="text-gray-400">Rank:</span> {game.rank}
+                          </p>
+                        )}
+                        {game.hours_played > 0 && (
+                          <p className="text-sm">
+                            <span className="text-gray-400">Hours:</span> {game.hours_played}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-400">
+                  <p>No games added yet. Add some games to help others find you!</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

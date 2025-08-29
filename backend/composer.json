@@ -1,0 +1,16 @@
+{
+    "name": "mrpow/backend",
+    "description": "package composer",
+    "autoload": {
+        "psr-4": {
+            "Mrpow\\Backend\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "git",
+            "email": "erwannn.pro@gmail.com"
+        }
+    ],
+    "require": {}
+}
