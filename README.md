@@ -196,23 +196,6 @@ For detailed API documentation, visit our [API Docs](docs/api.md).
 
 ---
 
-## 🎨 **Screenshots**
-
-<div align="center">
-
-### Dashboard
-![Dashboard](https://via.placeholder.com/800x400/1F2937/F3F4F6?text=GameConnect+Dashboard)
-
-### Player Matching
-![Matching](https://via.placeholder.com/800x400/3B82F6/FFFFFF?text=Smart+Player+Matching)
-
-### Game Library
-![Games](https://via.placeholder.com/800x400/10B981/FFFFFF?text=Game+Library+Management)
-
-</div>
-
----
-
 ## 🛣️ **Roadmap**
 
 ### **Phase 1: Core Features** ✅
