@@ -40,9 +40,8 @@ CREATE TABLE user_profiles (
     -- location renommée en region
     region VARCHAR(255), -- région de l’utilisateur (ex: "Europe", "NA")
 
-    -- date de naissance, mais seulement si utilisateur a +15 ans
-    date_of_birth DATE,
-    CONSTRAINT chk_minimum_age CHECK (date_of_birth IS NULL OR date_of_birth <= DATE_SUB(CURDATE(), INTERVAL 15 YEAR)),
+    -- date de naissance
+    date_of_birth DATE, --vérifier la majorité numérique légale selon pays dans le backend
 
     avatar_url VARCHAR(500), -- image de profil
     bio TEXT, -- description
