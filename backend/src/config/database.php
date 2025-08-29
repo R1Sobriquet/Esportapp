@@ -53,5 +53,6 @@ class Database {
 
 // Helper function to get database connection
 function getDB() {
+    print "Connexion établie"
     return Database::getInstance()->getConnection();
 }
