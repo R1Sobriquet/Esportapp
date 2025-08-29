@@ -304,19 +304,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 👥 **Team**
-
-<div align="center">
-
-**Built with ❤️ by the GameConnect Team**
-
-| Role | Name | Contact |
-|------|------|---------|
-| **Lead Developer** | Your Name | [@yourusername](https://github.com/yourusername) |
-| **UI/UX Designer** | Designer Name | [@designer](https://github.com/designer) |
-| **Backend Developer** | Backend Dev | [@backend](https://github.com/backend) |
-
-</div>
+**Moi**
 
 ---
 
