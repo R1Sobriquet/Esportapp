@@ -84,7 +84,7 @@ export default function Profile() {
       setIsEditing(false);
     } catch (error) {
       console.error('Failed to update profile:', error);
-      alert('Failed to update profile: ' + (error.response?.data?.error || error.message));
+      alert('Failed to update profile: ' + (error.response?.data?.detail || error.message));
     } finally {
       setSaving(false);
     }
@@ -100,7 +100,7 @@ export default function Profile() {
       await loadProfile();
     } catch (error) {
       console.error('Failed to add game:', error);
-      alert('Failed to add game: ' + (error.response?.data?.error || error.message));
+      alert('Failed to add game: ' + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -137,18 +137,18 @@ export default function Profile() {
               />
               <div>
                 <h1 className="text-3xl font-bold">
-                  {profile.first_name || profile.last_name 
-                    ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim()
-                    : profile.username
-                  }
+                  {profile.username}
                 </h1>
                 <p className="text-gray-400">@{profile.username}</p>
+                {profile.region && (
+                  <p className="text-gray-400 mt-1">📍 {profile.region}</p>
+                )}
                 <div className="flex gap-4 mt-2">
                   <span className="px-3 py-1 bg-blue-600 rounded-full text-sm">
                     {profile.skill_level}
                   </span>
                   <span className="px-3 py-1 bg-green-600 rounded-full text-sm">
-                    Looking for {profile.looking_for}
+                    Looking for {profile.looking_for?.replace('_', ' ')}
                   </span>
                 </div>
               </div>
@@ -176,25 +176,26 @@ export default function Profile() {
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  First Name
+                  Region
                 </label>
                 <input
                   type="text"
-                  name="first_name"
-                  value={editForm.first_name || ''}
+                  name="region"
+                  value={editForm.region || ''}
                   onChange={handleEditChange}
+                  placeholder="e.g., Europe, NA, Asia"
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Last Name
+                  Date of Birth
                 </label>
                 <input
-                  type="text"
-                  name="last_name"
-                  value={editForm.last_name || ''}
+                  type="date"
+                  name="date_of_birth"
+                  value={editForm.date_of_birth || ''}
                   onChange={handleEditChange}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
                 />
@@ -215,19 +216,6 @@ export default function Profile() {
               
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Location
-                </label>
-                <input
-                  type="text"
-                  name="location"
-                  value={editForm.location || ''}
-                  onChange={handleEditChange}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Timezone
                 </label>
                 <input
@@ -235,7 +223,7 @@ export default function Profile() {
                   name="timezone"
                   value={editForm.timezone || ''}
                   onChange={handleEditChange}
-                  placeholder="e.g., America/New_York"
+                  placeholder="e.g., Europe/Paris, America/New_York"
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
                 />
               </div>
@@ -261,6 +249,19 @@ export default function Profile() {
                   type="text"
                   name="steam_id"
                   value={editForm.steam_id || ''}
+                  onChange={handleEditChange}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Twitch Username
+                </label>
+                <input
+                  type="text"
+                  name="twitch_username"
+                  value={editForm.twitch_username || ''}
                   onChange={handleEditChange}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
                 />
@@ -301,6 +302,24 @@ export default function Profile() {
                   ))}
                 </select>
               </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Profile Visibility
+                </label>
+                <select
+                  name="profile_visibility"
+                  value={editForm.profile_visibility || 'public'}
+                  onChange={handleEditChange}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+                >
+                  {visibilityOptions.map(option => (
+                    <option key={option} value={option}>
+                      {option.charAt(0).toUpperCase() + option.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
             
             <div className="mt-6">
@@ -317,52 +336,28 @@ export default function Profile() {
               />
             </div>
             
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold mb-4">Preferences</h3>
+            <div className="mt-6 flex gap-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="show_stats"
+                  checked={editForm.show_stats !== false}
+                  onChange={handleEditChange}
+                  className="mr-2"
+                />
+                <span className="text-sm text-gray-300">Show Stats</span>
+              </label>
               
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Preferred Game Modes
-                  </label>
-                  <div className="space-y-2">
-                    {gameModes.map(mode => (
-                      <label key={mode} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="preferences.game_modes"
-                          value={mode}
-                          checked={(editForm.preferences?.game_modes || []).includes(mode)}
-                          onChange={handleEditChange}
-                          className="mr-2"
-                        />
-                        <span className="capitalize">{mode}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Preferred Play Times
-                  </label>
-                  <div className="space-y-2">
-                    {playtimes.map(time => (
-                      <label key={time} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="preferences.playtimes"
-                          value={time}
-                          checked={(editForm.preferences?.playtimes || []).includes(time)}
-                          onChange={handleEditChange}
-                          className="mr-2"
-                        />
-                        <span className="capitalize">{time}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="allow_friend_requests"
+                  checked={editForm.allow_friend_requests !== false}
+                  onChange={handleEditChange}
+                  className="mr-2"
+                />
+                <span className="text-sm text-gray-300">Allow Friend Requests</span>
+              </label>
             </div>
             
             <div className="mt-6 flex gap-4">
@@ -390,12 +385,12 @@ export default function Profile() {
               <h2 className="text-2xl font-bold mb-6">Profile Details</h2>
               
               <div className="grid md:grid-cols-2 gap-6">
-                {profile.location && (
+                {profile.region && (
                   <div>
                     <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">
-                      Location
+                      Region
                     </h3>
-                    <p className="mt-1">{profile.location}</p>
+                    <p className="mt-1">{profile.region}</p>
                   </div>
                 )}
                 
@@ -423,6 +418,15 @@ export default function Profile() {
                       Steam ID
                     </h3>
                     <p className="mt-1">{profile.steam_id}</p>
+                  </div>
+                )}
+                
+                {profile.twitch_username && (
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">
+                      Twitch
+                    </h3>
+                    <p className="mt-1">{profile.twitch_username}</p>
                   </div>
                 )}
               </div>

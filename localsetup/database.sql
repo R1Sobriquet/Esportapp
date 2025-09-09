@@ -30,43 +30,28 @@ CREATE TABLE users (
 -- ============================================================
 CREATE TABLE user_profiles (
     id INT PRIMARY KEY AUTO_INCREMENT, 
-    user_id INT UNIQUE NOT NULL, -- Relation 1-1 avec users : 
-                                 -- Chaque utilisateur possède au maximum un profil, 
-                                 -- et chaque profil correspond à un seul utilisateur.
-
-
-    -- ===> Colonnes modifiées
-    -- first_name et last_name supprimés
-    -- location renommée en region
+    user_id INT UNIQUE NOT NULL,
     region VARCHAR(255), -- région de l’utilisateur (ex: "Europe", "NA")
-
-    -- date de naissance
-    date_of_birth DATE, --vérifier la majorité numérique légale selon pays dans le backend
-
+    date_of_birth DATE, -- vérifier la majorité numérique légale selon pays dans le backend
     avatar_url VARCHAR(500), -- image de profil
     bio TEXT, -- description
     timezone VARCHAR(50), -- fuseau horaire
-
-    -- Identifiants gaming/streaming
-    discord_username VARCHAR(100),
+    discord_username VARCHAR(100),  -- Identifiants gaming/streaming
     steam_id VARCHAR(100),
     twitch_username VARCHAR(100),
-
-    -- Compétences et recherche
-    skill_level ENUM('beginner', 'intermediate', 'advanced', 'expert') DEFAULT 'beginner',
-    looking_for ENUM('teammates', 'mentor', 'casual_friends', 'competitive_team') DEFAULT 'teammates',
-
+    skill_level ENUM('beginner', 'intermediate', 'advanced', 'expert') DEFAULT 'beginner', -- niveau global
+    looking_for ENUM('teammates', 'mentor', 'casual_friends', 'competitive_team') DEFAULT 'teammates',  -- ce qu’il recherche
     -- Confidentialité
     profile_visibility ENUM('public', 'friends', 'private') DEFAULT 'public',
     show_stats BOOLEAN DEFAULT TRUE,
     allow_friend_requests BOOLEAN DEFAULT TRUE,
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
     -- Relation avec users
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+); -- Relation 1-1 avec users : 
+   -- Chaque utilisateur possède au maximum un profil, 
+   -- et chaque profil correspond à un seul utilisateur.
 
 -- ============================================================
 -- TABLE : games
@@ -83,9 +68,7 @@ CREATE TABLE games (
 
 -- ============================================================
 -- TABLE : user_games
--- Relation N-N entre users et games (via cette table) : 
--- Un utilisateur peut jouer à plusieurs jeux 
--- et un jeu peut être joué par plusieurs utilisateurs.
+-- Relation N-N entre users et games
 -- ============================================================
 CREATE TABLE user_games (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -98,11 +81,9 @@ CREATE TABLE user_games (
     is_favorite BOOLEAN DEFAULT FALSE, -- si c’est son jeu favori
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
     -- Relations
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,
-
     -- Contrainte : un utilisateur ne peut pas avoir le même jeu en double
     UNIQUE KEY unique_user_game (user_id, game_id)
 );
@@ -110,9 +91,6 @@ CREATE TABLE user_games (
 -- ============================================================
 -- TABLE : user_preferences
 -- Stocke les préférences de jeu d’un utilisateur
--- Relation 1-1 (ou 1-N selon usage) avec users :
--- Chaque utilisateur peut avoir une ou plusieurs préférences, 
--- mais chaque préférence appartient à un seul utilisateur.
 -- ============================================================
 CREATE TABLE user_preferences (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -129,9 +107,6 @@ CREATE TABLE user_preferences (
 -- ============================================================
 -- TABLE : matches
 -- Gère les mises en relation entre deux utilisateurs
--- Relation N-N entre utilisateurs (via cette table) :
--- Un utilisateur peut être mis en relation avec plusieurs autres, 
--- et chaque relation concerne exactement deux utilisateurs.
 -- ============================================================
 CREATE TABLE matches (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -143,11 +118,9 @@ CREATE TABLE matches (
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
     -- Relations
     FOREIGN KEY (user1_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (user2_id) REFERENCES users(id) ON DELETE CASCADE,
-
     -- Un match entre deux joueurs doit être unique
     UNIQUE KEY unique_match (user1_id, user2_id)
 );
@@ -155,9 +128,6 @@ CREATE TABLE matches (
 -- ============================================================
 -- TABLE : messages
 -- Messagerie privée entre utilisateurs
--- Relation N-N entre utilisateurs (via cette table) :
--- Un utilisateur peut envoyer plusieurs messages à d’autres, 
--- et chaque message relie exactement un expéditeur et un destinataire.
 -- ============================================================
 CREATE TABLE messages (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -166,7 +136,6 @@ CREATE TABLE messages (
     content TEXT NOT NULL, -- contenu du message
     is_read BOOLEAN DEFAULT FALSE, -- lu ou non
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
     -- Relations
     FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
