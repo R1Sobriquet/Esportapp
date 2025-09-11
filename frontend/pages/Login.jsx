@@ -35,16 +35,34 @@ export default function Login() {
     if (result.success) {
       navigate('/');
     } else {
-      setError(result.error);
+      setError(result.error || 'Invalid credentials');
     }
     
     setLoading(false);
+  };
+
+  // Quick fill for demo accounts
+  const fillDemoAccount = (accountNumber) => {
+    const demoAccounts = [
+      { email: 'alice@example.com', password: 'password123' },
+      { email: 'bob@example.com', password: 'password123' },
+      { email: 'charlie@example.com', password: 'password123' }
+    ];
+    
+    if (demoAccounts[accountNumber]) {
+      setFormData(demoAccounts[accountNumber]);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
+          <div className="flex justify-center mb-4">
+            <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center">
+              <span className="text-3xl">🎮</span>
+            </div>
+          </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
             Welcome back
           </h2>
@@ -113,13 +131,17 @@ export default function Login() {
             </button>
           </div>
 
-          <div className="text-center">
-            <p className="text-gray-400">
-              Don't have an account?{' '}
-              <a href="/register" className="text-blue-400 hover:text-blue-300 font-medium">
-                Sign up here
+          <div className="flex items-center justify-between">
+            <div className="text-sm">
+              <a href="#" className="text-blue-400 hover:text-blue-300">
+                Forgot password?
               </a>
-            </p>
+            </div>
+            <div className="text-sm">
+              <a href="/register" className="text-blue-400 hover:text-blue-300">
+                Create account
+              </a>
+            </div>
           </div>
         </form>
 
@@ -129,18 +151,47 @@ export default function Login() {
               <div className="w-full border-t border-gray-600" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-900 text-gray-400">Demo Accounts</span>
+              <span className="px-2 bg-gray-900 text-gray-400">Quick Demo Access</span>
             </div>
           </div>
           
           <div className="mt-4 space-y-2">
-            <button
-              onClick={() => setFormData({ email: 'gamer1@example.com', password: 'password' })}
-              className="w-full text-left px-3 py-2 text-sm bg-gray-800 hover:bg-gray-700 rounded-md text-gray-300 transition-colors"
-            >
-              Use Demo Account: gamer1@example.com
-            </button>
+            <p className="text-xs text-gray-500 text-center mb-2">
+              Click to use a demo account (password: password123)
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => fillDemoAccount(0)}
+                className="px-3 py-2 text-xs bg-gray-800 hover:bg-gray-700 rounded-md text-gray-300 transition-colors"
+              >
+                Alice (FPS)
+              </button>
+              <button
+                type="button"
+                onClick={() => fillDemoAccount(1)}
+                className="px-3 py-2 text-xs bg-gray-800 hover:bg-gray-700 rounded-md text-gray-300 transition-colors"
+              >
+                Bob (MMO)
+              </button>
+              <button
+                type="button"
+                onClick={() => fillDemoAccount(2)}
+                className="px-3 py-2 text-xs bg-gray-800 hover:bg-gray-700 rounded-md text-gray-300 transition-colors"
+              >
+                Charlie (MOBA)
+              </button>
+            </div>
           </div>
+        </div>
+
+        <div className="text-center">
+          <p className="text-gray-400 text-sm">
+            Don't have an account?{' '}
+            <a href="/register" className="text-blue-400 hover:text-blue-300 font-medium">
+              Sign up here
+            </a>
+          </p>
         </div>
       </div>
     </div>

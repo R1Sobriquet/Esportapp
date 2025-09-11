@@ -1,120 +1,242 @@
-# API FastAPI - Plateforme eSport
+# 🚀 API FastAPI - Plateforme d'E-Sport Social
 
-Ce projet est une API REST complète pour interagir avec la base de données `esport_social`.
+API REST complète pour la plateforme sociale gaming avec authentification JWT, matching de joueurs et messagerie.
 
-## Prérequis
+## ✨ Fonctionnalités
 
-- Python 3.10+
-- MySQL (service `MySQL80` actif sous Windows)
-- Base de données créée à partir du fichier `database.sql`
+- 🔐 **Authentification JWT** sécurisée
+- 👤 **Gestion des profils** utilisateurs
+- 🎮 **Catalogue de jeux** et profils gaming
+- 🤝 **Système de matching** intelligent
+- 💬 **Messagerie** entre utilisateurs matchés
+- 📊 **Documentation API** interactive (Swagger/ReDoc)
 
-## Installation
+## 📋 Prérequis
 
+- Python 3.8+
+- MySQL 5.7+ ou MariaDB
+- pip (gestionnaire de paquets Python)
+
+## ⚡ Installation Rapide
+
+### 1. Cloner et configurer
+
+```bash
+# Aller dans le dossier API
+cd API
+
+# Créer un environnement virtuel (recommandé)
+python -m venv venv
+
+# Activer l'environnement virtuel
+# Windows:
+venv\Scripts\activate
+# Linux/Mac:
+source venv/bin/activate
+
+# Installer les dépendances
 pip install -r requirements.txt
+```
 
-## Lancer l'API
+### 2. Configuration de l'environnement
 
-uvicorn main:app --reload
+Créer un fichier `.env` dans le dossier `/API` :
 
-Ouvrir dans le navigateur :
+```env
+DB_HOST=localhost
+DB_USER=root
+DB_PASS=votre_mot_de_passe
+DB_NAME=esport_social
+JWT_SECRET=your-secret-key-change-this
+```
 
-http://127.0.0.1:8000/docs
+### 3. Base de données
 
-L'interface Swagger vous permet de tester directement toutes les routes disponibles.
+```bash
+# Créer la base de données
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS esport_social CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
-## Initialisation de la base de données
+# Importer le schéma
+mysql -u root -p esport_social < ../database.sql
 
-1. Lancer le serveur MySQL (Windows) :
+# (Optionnel) Ajouter des données de test
+mysql -u root -p esport_social < ../test_data.sql
+```
 
-net start MySQL80
+### 4. Lancer l'API
 
-2. Ouvrir la console MySQL :
+```bash
+# Méthode 1: Avec le script Python directement
+python main.py
 
-mysql -u root -p
+# Méthode 2: Avec uvicorn (plus d'options)
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
 
-3. Importer le fichier SQL :
+L'API sera accessible sur : **http://localhost:8000**
 
-SOURCE C:/chemin/vers/database.sql;
+## 📚 Documentation
 
-## Structure du projet
+### Documentation Interactive
 
-projet/
-│
-├── main.py             ← Code principal de l’API
-├── requirements.txt    ← Dépendances Python
-├── database.sql        ← Script de création de la BDD
-└── README.md           ← Ce fichier
+- **Swagger UI** : http://localhost:8000/docs
+- **ReDoc** : http://localhost:8000/redoc
 
-## Endpoints principaux
+### Endpoints Principaux
 
-### /users
+#### 🔐 Authentification
 
-- GET /users  
-  ➤ Retourne tous les utilisateurs
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| POST | `/register` | Créer un nouveau compte |
+| POST | `/login` | Se connecter |
 
-- POST /users  
-  ➤ Ajoute un nouvel utilisateur  
-  Exemple JSON :
-  {
+#### 👤 Profils
+
+| Méthode | Endpoint | Description | Auth |
+|---------|----------|-------------|------|
+| GET | `/profile` | Obtenir son profil | ✅ |
+| PUT | `/profile` | Mettre à jour son profil | ✅ |
+
+#### 🎮 Jeux
+
+| Méthode | Endpoint | Description | Auth |
+|---------|----------|-------------|------|
+| GET | `/games` | Liste tous les jeux | ❌ |
+| GET | `/user/games` | Mes jeux | ✅ |
+| POST | `/user/games` | Ajouter un jeu | ✅ |
+| DELETE | `/user/games/{id}` | Retirer un jeu | ✅ |
+
+#### 🤝 Matching
+
+| Méthode | Endpoint | Description | Auth |
+|---------|----------|-------------|------|
+| POST | `/matches` | Trouver des matchs | ✅ |
+| GET | `/matches` | Mes matchs | ✅ |
+| POST | `/matches/{id}/accept` | Accepter un match | ✅ |
+| POST | `/matches/{id}/reject` | Rejeter un match | ✅ |
+
+#### 💬 Messages
+
+| Méthode | Endpoint | Description | Auth |
+|---------|----------|-------------|------|
+| GET | `/messages` | Conversations | ✅ |
+| GET | `/messages/{user_id}` | Messages avec un utilisateur | ✅ |
+| POST | `/messages` | Envoyer un message | ✅ |
+
+## 🧪 Tests avec cURL
+
+### Créer un compte
+
+```bash
+curl -X POST http://localhost:8000/register \
+  -H "Content-Type: application/json" \
+  -d '{
     "email": "test@example.com",
-    "username": "joueur1",
-    "password_hash": "motdepassehashé"
-  }
+    "username": "testuser",
+    "password": "password123",
+    "profile": {
+      "region": "Europe",
+      "skill_level": "intermediate"
+    }
+  }'
+```
 
-- DELETE /users/{id}  
-  ➤ Supprime un utilisateur par ID
+### Se connecter
 
-### /profiles
+```bash
+curl -X POST http://localhost:8000/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "password": "password123"
+  }'
+```
 
-- GET /profiles  
-  ➤ Retourne tous les profils
+### Obtenir son profil (avec token)
 
-- POST /profiles  
-  ➤ Crée un profil utilisateur  
-  Exemple JSON :
-  {
-    "user_id": 1,
-    "region": "Europe",
-    "date_of_birth": "2000-01-01",
-    "bio": "Joueur compétitif",
-    "skill_level": "advanced",
-    "looking_for": "teammates"
-  }
+```bash
+curl -X GET http://localhost:8000/profile \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
 
-- DELETE /profiles/{user_id}  
-  ➤ Supprime le profil associé à un utilisateur
+## 🔧 Développement
 
-### /games
+### Structure du projet
 
-- GET /games  
-  ➤ Liste tous les jeux
+```
+API/
+├── main.py              # Application FastAPI principale
+├── requirements.txt     # Dépendances Python
+├── .env                 # Variables d'environnement (à créer)
+└── README.md           # Ce fichier
+```
 
-- POST /games  
-  ➤ Ajoute un jeu  
-  Exemple JSON :
-  {
-    "name": "Valorant",
-    "category": "FPS",
-    "icon_url": "https://example.com/icon.png",
-    "api_id": "val123"
-  }
+### Modèles Pydantic
 
-- DELETE /games/{id}  
-  ➤ Supprime un jeu
+L'API utilise Pydantic pour la validation des données :
 
-## Tester les routes via curl (exemples)
+- `UserRegister` : Inscription
+- `UserLogin` : Connexion
+- `UserProfile` : Profil utilisateur
+- `UserGame` : Jeu d'un utilisateur
+- `Message` : Message entre utilisateurs
 
-### Ajouter un utilisateur
+### Sécurité
 
-curl -X POST http://127.0.0.1:8000/users -H "Content-Type: application/json" -d "{\"email\":\"test@example.com\",\"username\":\"testuser\",\"password_hash\":\"abc123\"}"
+- Mots de passe hachés avec **bcrypt**
+- Tokens JWT avec expiration de 7 jours
+- Validation des données avec Pydantic
+- CORS configuré pour le frontend
 
-### Voir les utilisateurs
+## 🐛 Dépannage
 
-curl http://127.0.0.1:8000/users
+### Erreur de connexion MySQL
 
-## Remarques
+```
+MySQLdb.OperationalError: (2003, "Can't connect to MySQL server")
+```
 
-- Vous pouvez modifier les identifiants MySQL dans main.py si nécessaire (user, passwd, etc.).
-- Si vous déplacez le projet, vérifiez le chemin du fichier database.sql lors de l’import.
-- L'API ne contient pas d'authentification pour le moment (dev uniquement).
-- Vous trouverez plus de documentation dans /docs
+**Solution** :
+- Vérifier que MySQL est démarré
+- Vérifier les identifiants dans `.env`
+- Vérifier le port MySQL (3306 par défaut)
+
+### Erreur d'import
+
+```
+ModuleNotFoundError: No module named 'fastapi'
+```
+
+**Solution** :
+```bash
+pip install -r requirements.txt
+```
+
+### Token invalide
+
+**Solution** :
+- Vérifier que `JWT_SECRET` est défini dans `.env`
+- S'assurer que le token est envoyé dans le header Authorization
+- Format : `Bearer YOUR_TOKEN`
+
+## 🚀 Production
+
+Pour la production :
+
+1. **Changer le JWT_SECRET** dans `.env`
+2. Utiliser **gunicorn** avec uvicorn workers :
+   ```bash
+   gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker
+   ```
+3. Mettre derrière un **reverse proxy** (nginx)
+4. Activer **HTTPS**
+5. Limiter les **CORS origins**
+
+## 📝 Licence
+
+Projet éducatif - E-Sport Social Platform
+
+---
+
+**Note** : Pour le frontend React, voir `/frontend/README.md`
