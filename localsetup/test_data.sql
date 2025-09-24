@@ -49,10 +49,6 @@ INSERT INTO games (name, category, icon_url, api_id) VALUES
 -- Hash pour "password123" avec bcrypt: $2b$12$LQdV7XkwPxGTgvfpK8FTEu0KNvmGCFkVpRYK2YJwrm9bWcGpXHNyu
 -- ATTENTION: Ce hash peut varier selon votre installation, il est préférable de créer les comptes via l'API
 
-/*
--- Décommentez ces lignes si vous voulez insérer des utilisateurs de test
--- (après avoir vérifié le hash bcrypt correct pour votre système)
-
 INSERT INTO users (email, username, password_hash, email_verified) VALUES
 ('alice@example.com', 'AliceGamer', '$2b$12$LQdV7XkwPxGTgvfpK8FTEu0KNvmGCFkVpRYK2YJwrm9bWcGpXHNyu', TRUE),
 ('bob@example.com', 'BobTheBuilder', '$2b$12$LQdV7XkwPxGTgvfpK8FTEu0KNvmGCFkVpRYK2YJwrm9bWcGpXHNyu', TRUE),
@@ -65,7 +61,7 @@ INSERT INTO user_profiles (user_id, region, bio, skill_level, looking_for, disco
 (3, 'Asia', 'Joueur compétitif cherchant une équipe pour tournois', 'expert', 'competitive_team', 'Charlie#9012');
 
 -- Jeux des utilisateurs
-INSERT INTO user_games (user_id, game_id, skill_level, rank, hours_played, is_favorite) VALUES
+INSERT INTO user_games (user_id, game_id, skill_level, game_rank, hours_played, is_favorite) VALUES
 (1, 1, 'advanced', 'Diamond 2', 500, TRUE),  -- Alice joue à Valorant
 (1, 3, 'intermediate', 'Master Guardian', 300, FALSE),  -- Alice joue à CS2
 (2, 15, 'intermediate', 'Level 60', 1000, TRUE),  -- Bob joue à WoW

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../src/contexts/AuthContext';
 import { profileAPI, gamesAPI } from '../src/services/api';
+import Avatar from '../src/components/Avatar';
 
 export default function Profile() {
   const { user } = useAuth();
@@ -130,10 +131,12 @@ export default function Profile() {
         <div className="bg-gray-800 rounded-lg p-6 mb-8">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-6">
-              <img
-                src={profile.avatar_url || '/default-avatar.png'}
-                alt={profile.username || 'User'}
-                className="w-24 h-24 rounded-full"
+              {/* Avatar avec composant Avatar */}
+              <Avatar 
+                src={profile.avatar_url}
+                username={profile.username}
+                size={96}
+                className="ring-2 ring-blue-500/20"
               />
               <div>
                 <h1 className="text-3xl font-bold">
@@ -210,6 +213,7 @@ export default function Profile() {
                   name="avatar_url"
                   value={editForm.avatar_url || ''}
                   onChange={handleEditChange}
+                  placeholder="URL de votre image de profil"
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
                 />
               </div>

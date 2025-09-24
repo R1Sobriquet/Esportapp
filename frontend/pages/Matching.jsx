@@ -1,24 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { matchingAPI } from '../src/services/api';
+import { useNavigate } from 'react-router-dom';
+import { matchingAPI, gamesAPI } from '../src/services/api';
 import { useAuth } from '../src/contexts/AuthContext';
+import Avatar from '../src/components/Avatar';
 
 export default function Matching() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [matches, setMatches] = useState([]);
   const [currentMatches, setCurrentMatches] = useState([]);
+  const [userGames, setUserGames] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('discover');
+  const [debugInfo, setDebugInfo] = useState('');
 
   useEffect(() => {
     if (user) {
       loadCurrentMatches();
+      loadUserGames();
     }
   }, [user]);
+
+  const loadUserGames = async () => {
+    try {
+      const response = await gamesAPI.getUserGames();
+      setUserGames(response.data);
+      console.log('User games loaded:', response.data);
+    } catch (error) {
+      console.error('Failed to load user games:', error);
+    }
+  };
 
   const loadCurrentMatches = async () => {
     try {
       const response = await matchingAPI.getMatches();
       setCurrentMatches(response.data.matches);
+      console.log('Current matches loaded:', response.data.matches);
     } catch (error) {
       console.error('Failed to load current matches:', error);
     }
@@ -26,14 +43,25 @@ export default function Matching() {
 
   const findMatches = async () => {
     setLoading(true);
+    setDebugInfo('🔍 Recherche de matchs en cours...');
+    
     try {
+      console.log('Starting match search...');
       const response = await matchingAPI.findMatches();
-      setMatches(response.data.matches);
+      console.log('Match search response:', response.data);
+      
+      setMatches(response.data.matches || []);
+      
+      if (response.data.matches && response.data.matches.length > 0) {
+        setDebugInfo(`✅ ${response.data.matches.length} match(s) trouvé(s) !`);
+      } else if (response.data.message) {
+        setDebugInfo(`ℹ️ ${response.data.message}`);
+      } else {
+        setDebugInfo('❌ Aucun match trouvé. Vérifiez que vous avez des jeux dans votre profil.');
+      }
     } catch (error) {
       console.error('Failed to find matches:', error);
-      if (error.response?.data?.message) {
-        alert(error.response.data.message);
-      }
+      setDebugInfo(`❌ Erreur: ${error.response?.data?.detail || error.message}`);
     } finally {
       setLoading(false);
     }
@@ -45,10 +73,10 @@ export default function Matching() {
       await loadCurrentMatches();
       // Remove from potential matches
       setMatches(prev => prev.filter(m => m.match_id !== matchId));
-      alert('Match accepted! You can now message this player.');
+      alert('Match accepté ! Tu peux maintenant envoyer un message à ce joueur.');
     } catch (error) {
       console.error('Failed to accept match:', error);
-      alert('Failed to accept match: ' + (error.response?.data?.error || error.message));
+      alert('Impossible d\'accepter le match: ' + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -59,6 +87,13 @@ export default function Matching() {
     } catch (error) {
       console.error('Failed to reject match:', error);
     }
+  };
+
+  // Fonction pour initier une conversation
+  const startConversation = (matchUserId, matchUsername) => {
+    console.log('Starting conversation with:', matchUserId, matchUsername);
+    // Naviguer vers la page messages avec l'ID utilisateur
+    navigate(`/messages?user=${matchUserId}&username=${matchUsername}`);
   };
 
   const getMatchScoreColor = (score) => {
@@ -76,14 +111,60 @@ export default function Matching() {
     }
   };
 
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl mb-4">Connecte-toi pour utiliser le matching</h2>
+          <a href="/login" className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg">
+            Se connecter
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Find Gaming Partners</h1>
+          <h1 className="text-3xl font-bold mb-2">Trouver des Coéquipiers</h1>
           <p className="text-gray-400">
-            Discover players who match your games, skill level, and playtime preferences
+            Découvre des joueurs qui partagent tes jeux, ton niveau et tes créneaux de jeu
           </p>
+        </div>
+
+        {/* Debug Info */}
+        {debugInfo && (
+          <div className="bg-gray-800 border border-gray-600 rounded-lg p-4 mb-6">
+            <p className="text-sm">{debugInfo}</p>
+          </div>
+        )}
+
+        {/* User Games Status */}
+        <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 mb-6">
+          <h3 className="font-semibold mb-2">🎮 Tes jeux ({userGames.length})</h3>
+          {userGames.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {userGames.slice(0, 5).map(game => (
+                <span key={game.id} className="px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full text-sm">
+                  {game.name} ({game.skill_level})
+                </span>
+              ))}
+              {userGames.length > 5 && (
+                <span className="px-3 py-1 bg-gray-600/20 text-gray-400 rounded-full text-sm">
+                  +{userGames.length - 5} autres
+                </span>
+              )}
+            </div>
+          ) : (
+            <div>
+              <p className="text-red-400 mb-2">Aucun jeu dans ton profil !</p>
+              <a href="/games" className="text-blue-400 hover:underline">
+                Ajouter des jeux →
+              </a>
+            </div>
+          )}
         </div>
 
         {/* Tabs */}
@@ -96,7 +177,7 @@ export default function Matching() {
                 : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
             }`}
           >
-            Discover
+            Découvrir
           </button>
           <button
             onClick={() => setActiveTab('matches')}
@@ -106,7 +187,7 @@ export default function Matching() {
                 : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
             }`}
           >
-            My Matches ({currentMatches.length})
+            Mes Matchs ({currentMatches.length})
           </button>
         </div>
 
@@ -115,18 +196,23 @@ export default function Matching() {
             <div className="mb-6">
               <button
                 onClick={findMatches}
-                disabled={loading}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors disabled:opacity-50"
+                disabled={loading || userGames.length === 0}
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <div className="flex items-center">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Finding matches...
+                    Recherche en cours...
                   </div>
                 ) : (
-                  'Find New Matches'
+                  'Trouver de Nouveaux Matchs'
                 )}
               </button>
+              {userGames.length === 0 && (
+                <p className="text-red-400 text-sm mt-2">
+                  Vous devez d'abord ajouter des jeux à votre profil pour trouver des matchs.
+                </p>
+              )}
             </div>
 
             {matches.length > 0 ? (
@@ -135,23 +221,23 @@ export default function Matching() {
                   <div key={match.match_id} className="bg-gray-800 rounded-lg p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-4">
-                        <img
-                          src={match.avatar_url || '/default-avatar.png'}
-                          alt={match.username}
-                          className="w-16 h-16 rounded-full"
+                        <Avatar 
+                          src={match.avatar_url}
+                          username={match.username}
+                          size={64}
                         />
                         <div>
                           <h3 className="text-xl font-semibold">{match.username}</h3>
                           <p className="text-gray-400">
-                            <span className="capitalize">{match.skill_level}</span> • Looking for{' '}
-                            <span className="capitalize">{match.looking_for?.replace('_', ' ')}</span>
+                            <span className="capitalize">{match.skill_level || 'Niveau non spécifié'}</span> • 
+                            Recherche <span className="capitalize">{match.looking_for?.replace('_', ' ') || 'coéquipiers'}</span>
                           </p>
                           <div className="flex items-center gap-2 mt-1">
                             <span className={`font-semibold ${getMatchScoreColor(match.match_score)}`}>
-                              {Math.round(match.match_score)}% match
+                              {Math.round(match.match_score)}% de compatibilité
                             </span>
-                            {match.location && (
-                              <span className="text-gray-500">• {match.location}</span>
+                            {match.region && (
+                              <span className="text-gray-500">• {match.region}</span>
                             )}
                           </div>
                         </div>
@@ -162,13 +248,13 @@ export default function Matching() {
                           onClick={() => acceptMatch(match.match_id)}
                           className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition-colors"
                         >
-                          Accept
+                          Accepter
                         </button>
                         <button
                           onClick={() => rejectMatch(match.match_id)}
                           className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition-colors"
                         >
-                          Pass
+                          Passer
                         </button>
                       </div>
                     </div>
@@ -181,7 +267,7 @@ export default function Matching() {
                     
                     {match.games && (
                       <div className="mt-4">
-                        <p className="text-sm text-gray-400 mb-2">Common Games:</p>
+                        <p className="text-sm text-gray-400 mb-2">Jeux en commun:</p>
                         <div className="flex flex-wrap gap-2">
                           {match.games.split(',').map((game, index) => (
                             <span
@@ -202,16 +288,16 @@ export default function Matching() {
                 <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
                   🎮
                 </div>
-                <h3 className="text-xl font-semibold mb-2">Ready to find teammates?</h3>
+                <h3 className="text-xl font-semibold mb-2">Prêt à trouver des coéquipiers ?</h3>
                 <p className="text-gray-400 mb-4">
-                  Click "Find New Matches" to discover players who share your gaming interests
+                  Clique sur "Trouver de Nouveaux Matchs" pour découvrir des joueurs compatibles
                 </p>
-                {!loading && (
+                {!loading && userGames.length > 0 && (
                   <button
                     onClick={findMatches}
                     className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors"
                   >
-                    Get Started
+                    Commencer
                   </button>
                 )}
               </div>
@@ -226,35 +312,35 @@ export default function Matching() {
                   <div key={match.match_id} className="bg-gray-800 rounded-lg p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-4">
-                        <img
-                          src={match.avatar_url || '/default-avatar.png'}
-                          alt={match.username}
-                          className="w-16 h-16 rounded-full"
+                        <Avatar 
+                          src={match.avatar_url}
+                          username={match.username}
+                          size={64}
                         />
                         <div>
                           <h3 className="text-xl font-semibold">{match.username}</h3>
                           <p className="text-gray-400">
-                            <span className="capitalize">{match.skill_level}</span> • Looking for{' '}
-                            <span className="capitalize">{match.looking_for?.replace('_', ' ')}</span>
+                            <span className="capitalize">{match.skill_level}</span> • 
+                            Recherche <span className="capitalize">{match.looking_for?.replace('_', ' ')}</span>
                           </p>
                           <div className="flex items-center gap-2 mt-1">
                             <span className={`font-semibold ${getMatchScoreColor(match.match_score)}`}>
-                              {Math.round(match.match_score)}% match
+                              {Math.round(match.match_score)}% de compatibilité
                             </span>
                             <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(match.status)}`}>
-                              {match.status}
+                              {match.status === 'accepted' ? 'Accepté' : 'En attente'}
                             </span>
                           </div>
                         </div>
                       </div>
                       
                       {match.status === 'accepted' && (
-                        <a
-                          href={`/messages?user=${match.user_id}`}
+                        <button
+                          onClick={() => startConversation(match.user_id, match.username)}
                           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors"
                         >
-                          Message
-                        </a>
+                          💬 Envoyer un Message
+                        </button>
                       )}
                     </div>
                     
@@ -266,7 +352,7 @@ export default function Matching() {
                     
                     {match.games && (
                       <div className="mt-4">
-                        <p className="text-sm text-gray-400 mb-2">Common Games:</p>
+                        <p className="text-sm text-gray-400 mb-2">Jeux en commun:</p>
                         <div className="flex flex-wrap gap-2">
                           {match.games.split(',').map((game, index) => (
                             <span
@@ -281,7 +367,7 @@ export default function Matching() {
                     )}
                     
                     <div className="mt-4 text-sm text-gray-500">
-                      Matched on {new Date(match.created_at).toLocaleDateString()}
+                      Matché le {new Date(match.created_at).toLocaleDateString('fr-FR')}
                     </div>
                   </div>
                 ))}
@@ -291,15 +377,15 @@ export default function Matching() {
                 <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
                   🤝
                 </div>
-                <h3 className="text-xl font-semibold mb-2">No matches yet</h3>
+                <h3 className="text-xl font-semibold mb-2">Pas encore de matchs</h3>
                 <p className="text-gray-400 mb-4">
-                  Start discovering new teammates to build your gaming network
+                  Commence à découvrir de nouveaux coéquipiers pour construire ton réseau gaming
                 </p>
                 <button
                   onClick={() => setActiveTab('discover')}
                   className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors"
                 >
-                  Find Matches
+                  Trouver des Matchs
                 </button>
               </div>
             )}
