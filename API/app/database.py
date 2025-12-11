@@ -19,11 +19,11 @@ def get_db_connection():
         MySQLdb.Connection: A new database connection
     """
     return MySQLdb.connect(
-        host=settings.DB_HOST,
-        user=settings.DB_USER,
-        passwd=settings.DB_PASS,
-        db=settings.DB_NAME,
-        charset=settings.DB_CHARSET
+        host=settings.db_host,
+        user=settings.db_user,
+        passwd=settings.db_password,
+        db=settings.db_name,
+        charset=settings.db_charset
     )
 
 
@@ -77,48 +77,48 @@ class DatabaseSession:
     """
 
     def __init__(self, dict_cursor: bool = False):
-        self.dict_cursor = dict_cursor
-        self.db = None
-        self.cursor = None
+        self.__dict_cursor = dict_cursor
+        self.__db = None
+        self.__cursor = None
 
     def __enter__(self):
-        self.db = get_db_connection()
-        cursor_class = DictCursor if self.dict_cursor else None
-        self.cursor = self.db.cursor(cursor_class) if cursor_class else self.db.cursor()
+        self.__db = get_db_connection()
+        cursor_class = DictCursor if self.__dict_cursor else None
+        self.__cursor = self.__db.cursor(cursor_class) if cursor_class else self.__db.cursor()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is not None:
-            self.db.rollback()
+            self.__db.rollback()
         else:
-            self.db.commit()
+            self.__db.commit()
 
-        self.cursor.close()
-        self.db.close()
+        self.__cursor.close()
+        self.__db.close()
         return False
 
     def execute(self, query: str, params: tuple = None):
         """Execute a query with optional parameters."""
         if params:
-            self.cursor.execute(query, params)
+            self.__cursor.execute(query, params)
         else:
-            self.cursor.execute(query)
-        return self.cursor
+            self.__cursor.execute(query)
+        return self.__cursor
 
     def fetchone(self):
         """Fetch one result."""
-        return self.cursor.fetchone()
+        return self.__cursor.fetchone()
 
     def fetchall(self):
         """Fetch all results."""
-        return self.cursor.fetchall()
+        return self.__cursor.fetchall()
 
     @property
     def lastrowid(self):
         """Get the last inserted row ID."""
-        return self.cursor.lastrowid
+        return self.__cursor.lastrowid
 
     @property
     def rowcount(self):
         """Get the number of affected rows."""
-        return self.cursor.rowcount
+        return self.__cursor.rowcount
