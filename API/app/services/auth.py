@@ -32,7 +32,7 @@ def create_access_token(user_id: int, expires_delta: Optional[timedelta] = None)
     if expires_delta:
         expires = datetime.utcnow() + expires_delta
     else:
-        expires = datetime.utcnow() + timedelta(days=settings.ACCESS_TOKEN_EXPIRE_DAYS)
+        expires = datetime.utcnow() + timedelta(days=settings.access_token_expire_days)
 
     to_encode = {
         "user_id": user_id,
@@ -40,7 +40,7 @@ def create_access_token(user_id: int, expires_delta: Optional[timedelta] = None)
         "iat": datetime.utcnow(),
     }
 
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=settings.ALGORITHM)
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=settings.algorithm)
 
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
@@ -59,7 +59,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) 
     token = credentials.credentials
 
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[settings.algorithm])
         return payload
     except ExpiredSignatureError:
         raise HTTPException(

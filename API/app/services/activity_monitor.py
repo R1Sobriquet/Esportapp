@@ -4,7 +4,6 @@ Tracks user activity and detects inactive accounts.
 """
 
 import asyncio
-import os
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 from enum import Enum
@@ -37,9 +36,19 @@ class ActivityMonitor:
         Args:
             db_connection: MySQL database connection
         """
-        self.db = db_connection
-        self.inactive_threshold_days = 30  # Account inactive after 30 days
-        self.warning_threshold_days = 21  # Warning after 21 days
+        self.__db = db_connection
+        self.__inactive_threshold_days = 30  # Account inactive after 30 days
+        self.__warning_threshold_days = 21  # Warning after 21 days
+
+    @property
+    def inactive_threshold_days(self) -> int:
+        """Get inactive threshold in days."""
+        return self.__inactive_threshold_days
+
+    @property
+    def warning_threshold_days(self) -> int:
+        """Get warning threshold in days."""
+        return self.__warning_threshold_days
 
     def log_activity(
         self,
@@ -57,7 +66,7 @@ class ActivityMonitor:
             ip: IP address of the request
             user_agent: User agent string
         """
-        cursor = self.db.cursor()
+        cursor = self.__db.cursor()
         try:
             # Update last activity timestamp
             cursor.execute(
@@ -78,7 +87,7 @@ class ActivityMonitor:
                 (user_id, activity_type, ip, user_agent),
             )
 
-            self.db.commit()
+            self.__db.commit()
         finally:
             cursor.close()
 
@@ -89,10 +98,10 @@ class ActivityMonitor:
         Returns:
             List of accounts that need warning
         """
-        cursor = self.db.cursor(DictCursor)
+        cursor = self.__db.cursor(DictCursor)
         try:
-            inactive_date = datetime.now() - timedelta(days=self.inactive_threshold_days)
-            warning_date = datetime.now() - timedelta(days=self.warning_threshold_days)
+            inactive_date = datetime.now() - timedelta(days=self.__inactive_threshold_days)
+            warning_date = datetime.now() - timedelta(days=self.__warning_threshold_days)
 
             # Find accounts that need warning
             cursor.execute(
@@ -128,7 +137,7 @@ class ActivityMonitor:
                 (inactive_date, inactive_date),
             )
 
-            self.db.commit()
+            self.__db.commit()
 
             return accounts_to_warn
 
@@ -145,7 +154,7 @@ class ActivityMonitor:
         Returns:
             Dictionary containing activity statistics
         """
-        cursor = self.db.cursor(DictCursor)
+        cursor = self.__db.cursor(DictCursor)
         try:
             cursor.execute(
                 """
@@ -175,7 +184,7 @@ class ActivityMonitor:
         Args:
             user_id: The user's ID to reactivate
         """
-        cursor = self.db.cursor()
+        cursor = self.__db.cursor()
         try:
             cursor.execute(
                 """
@@ -187,7 +196,7 @@ class ActivityMonitor:
                 (user_id,),
             )
 
-            self.db.commit()
+            self.__db.commit()
         finally:
             cursor.close()
 
@@ -200,10 +209,10 @@ async def check_inactive_accounts_task():
     while True:
         try:
             db = MySQLdb.connect(
-                host=settings.DB_HOST,
-                user=settings.DB_USER,
-                passwd=settings.DB_PASS,
-                db=settings.DB_NAME,
+                host=settings.db_host,
+                user=settings.db_user,
+                passwd=settings.db_password,
+                db=settings.db_name,
             )
 
             monitor = ActivityMonitor(db)
