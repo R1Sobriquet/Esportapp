@@ -1,6 +1,7 @@
 // frontend/src/components/WelcomeMessage.jsx
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from "../../contexts/AuthContext";
+
 
 export default function WelcomeMessage() {
   const { user } = useAuth();
