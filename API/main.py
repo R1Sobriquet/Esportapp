@@ -4,24 +4,73 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime, timedelta
-import MySQLdb
-import bcrypt
-import jwt
+from services.activity_monitor import ActivityMonitor, check_inactive_accounts_task
+import asyncio
+from contextlib import asynccontextmanager
 import os
+import sys
+import secrets
+import jwt
+import bcrypt
+import MySQLdb
+from jwt import ExpiredSignatureError, InvalidTokenError
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
-app = FastAPI(title="E-Sport Social Platform API")
+# Create FastAPI app instance
+from fastapi import FastAPI
+# app = FastAPI()
+# Context manager pour gérer le cycle de vie
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    task = asyncio.create_task(check_inactive_accounts_task())
+    yield
+    # Shutdown
+    task.cancel()
 
-# Security
-security = HTTPBearer()
-SECRET_KEY = os.getenv("JWT_SECRET", "your-secret-key-change-this")
+app = FastAPI(
+    title="E-Sport Social Platform API",
+    lifespan=lifespan
+)
+
+# ===================== SECURITY CONFIG =====================
+#  Vulnérabilité Critique JWT_SECRET - Validation au démarrage
+def get_jwt_secret():
+    """Get JWT secret or generate one if not exists."""
+    secret = os.getenv("JWT_SECRET")
+
+    if not secret or secret == "your-secret-key-change-this":
+        if os.getenv("ENV") == "production":
+            print("CRITICAL ERROR: JWT_SECRET not configured in production!")
+            sys.exit(1)
+
+        secret_file = ".jwt_secret"
+
+        if os.path.exists(secret_file):
+            with open(secret_file, "r") as f:
+                return f.read().strip()
+
+        new_secret = secrets.token_urlsafe(64)
+
+        with open(secret_file, "w") as f:
+            f.write(new_secret)
+
+        print("⚠️ JWT_SECRET was missing, a new one has been generated in .jwt_secret")
+        return new_secret
+
+    return secret
+
+# Apply secure secret
+SECRET_KEY = get_jwt_secret()
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 7
 
-# CORS Configuration
+security = HTTPBearer()
+#  Vulnérabilité Critique JWT_SECRET
+# CORS Configuration (moved after 'app' is defined)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://localhost:3000"],
@@ -98,14 +147,11 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("user_id")
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        return user_id
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        return payload
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
+    except InvalidTokenError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -214,6 +260,38 @@ def login(user: UserLogin):
     finally:
         cursor.close()
         db.close()
+
+
+# ===================== Système de Détection des Comptes Inactifs =====================
+
+# Middleware pour tracker l'activité
+@app.middleware("http")
+async def track_activity(request, call_next):
+    response = await call_next(request)
+    
+    # Si l'utilisateur est authentifié, logger l'activité
+    if hasattr(request.state, "user_id"):
+        try:
+            db = get_db()
+            monitor = ActivityMonitor(db)
+            monitor.log_activity(
+                user_id=request.state.user_id,
+                activity_type="api_call",
+                ip=request.client.host,
+                user_agent=request.headers.get("User-Agent")
+            )
+        except:
+            pass  # Ne pas bloquer la requête si le logging échoue
+    
+    return response
+
+# Endpoint pour les stats d'activité
+@app.get("/user/activity-stats")
+def get_user_activity_stats(user_id: int = Depends(verify_token)):
+    db = get_db()
+    monitor = ActivityMonitor(db)
+    stats = monitor.get_activity_stats(user_id)
+    return {"stats": stats}
 
 # ===================== PROFILE ENDPOINTS =====================
 
@@ -645,49 +723,40 @@ def get_messages(other_user_id: int, user_id: int = Depends(verify_token)):
 @app.post("/messages")
 def send_message(message: Message, user_id: int = Depends(verify_token)):
     db = get_db()
-    cursor = db.cursor(MySQLdb.cursors.DictCursor)
-    
+    cursor = db.cursor()
+
     try:
-        # Check if matched
+        # Vérifier si les deux utilisateurs sont match acceptés
         cursor.execute("""
             SELECT id FROM matches 
-            WHERE ((user1_id = %s AND user2_id = %s) OR (user1_id = %s AND user2_id = %s))
-                AND status = 'accepted'
+            WHERE (
+                (user1_id = %s AND user2_id = %s) OR 
+                (user1_id = %s AND user2_id = %s)
+            )
+            AND status = 'accepted'
         """, (user_id, message.receiver_id, message.receiver_id, user_id))
-        
+
         if not cursor.fetchone():
             raise HTTPException(status_code=403, detail="You can only message matched users")
-        
-        # Send message
+
+        # Insérer le message
         cursor.execute("""
-            INSERT INTO messages (sender_id, receiver_id, content)
-            VALUES (%s, %s, %s)
+            INSERT INTO messages (sender_id, receiver_id, content, is_read)
+            VALUES (%s, %s, %s, FALSE)
         """, (user_id, message.receiver_id, message.content))
-        
-        message_id = cursor.lastrowid
-        
-        # Get created message
-        cursor.execute("""
-            SELECT 
-                m.id,
-                m.sender_id,
-                m.receiver_id,
-                m.content,
-                m.is_read,
-                m.created_at,
-                u.username as sender_username,
-                p.avatar_url as sender_avatar
-            FROM messages m
-            JOIN users u ON m.sender_id = u.id
-            JOIN user_profiles p ON u.id = p.user_id
-            WHERE m.id = %s
-        """, (message_id,))
-        
+
         db.commit()
-        return {"success": True, "message": cursor.fetchone()}
+
+        return {"success": True, "message": "Message sent"}
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
     finally:
         cursor.close()
         db.close()
+
 
 # ===================== ROOT ENDPOINT =====================
 

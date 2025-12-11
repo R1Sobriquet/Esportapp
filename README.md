@@ -1,267 +1,294 @@
-# 🎮 GameConnect - E-Sports Social Gaming Platform
+# 🎮 GameConnect - Plateforme sociale de gaming e-sport
 
 <div align="center">
 
-![GameConnect Logo]([https://via.placeholder.com/200x80/3B82F6/FFFFFF?text=GameConnect](https://media.istockphoto.com/id/1560833158/fr/photo/contr%C3%B4leur-de-jeu-avec-clavier-%C3%A9clair%C3%A9-violet-au-milieu-de-divers-appareils-sans-fil.jpg?s=1024x1024&w=is&k=20&c=CnoqqQkITt9i0rfHQDaR-x9078NzTnPn9zlgBqWt3wc=))
+![Logo GameConnect](https://media.istockphoto.com/id/1560833158/fr/photo/contr%C3%B4leur-de-jeu-avec-clavier-%C3%A9clair%C3%A9-violet-au-milieu-de-divers-appareils-sans-fil.jpg?s=1024x1024\&w=is\&k=20\&c=CnoqqQkITt9i0rfHQDaR-x9078NzTnPn9zlgBqWt3wc=)
 
-[![PHP Version](https://img.shields.io/badge/PHP-8.0%2B-777BB4?style=flat-square&logo=php)](https://php.net/)
-[![React](https://img.shields.io/badge/React-18.2-61DAFB?style=flat-square&logo=react)](https://reactjs.org/)
-[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=flat-square&logo=mysql)](https://mysql.com/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.3-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
+[![Version PHP](https://img.shields.io/badge/PHP-8.0%2B-777BB4?style=flat-square\&logo=php)](https://php.net/)
+[![React](https://img.shields.io/badge/React-18.2-61DAFB?style=flat-square\&logo=react)](https://reactjs.org/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=flat-square\&logo=mysql)](https://mysql.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.3-38B2AC?style=flat-square\&logo=tailwind-css)](https://tailwindcss.com/)
+[![License](https://img.shields.io/badge/Licence-MIT-green.svg?style=flat-square)](LICENSE)
 
-**Connect • Compete • Conquer**
+**Connecte-toi • Joue • Conquiers**
 
-*The ultimate platform for gamers to find teammates, build communities, and dominate the competition together.*
+*La plateforme ultime pour les gamers : trouve des coéquipiers, crée ta communauté et dominez ensemble la compétition.*
 
-[🚀 Live Demo](#demo) • [📖 Documentation](#documentation) • [🐛 Report Bug](../../issues) • [💡 Request Feature](../../issues)
+[🚀 Démo en ligne](#demo) • [📖 Documentation](#documentation) • [🐛 Signaler un bug](../../issues) • [💡 Suggérer une fonctionnalité](../../issues)
 
 </div>
 
 ---
 
-## 🌟 **Features**
+## 🌟 **Fonctionnalités**
 
-### 🔐 **User Management**
-- **Secure Authentication** - JWT-based login system with password encryption
-- **Rich User Profiles** - Comprehensive profiles with gaming stats, preferences, and social links
-- **Privacy Controls** - Granular privacy settings for profile visibility
+### 🔐 **Gestion des utilisateurs**
 
-### 🎮 **Gaming Integration**
-- **Multi-Game Support** - Support for popular games across all genres (FPS, MOBA, Battle Royale, etc.)
-- **Skill Tracking** - Track your skill level, ranks, and hours played across different games
-- **Game Library Management** - Organize your favorite games and showcase your gaming identity
+* **Authentification sécurisée** — Système de connexion basé sur JWT avec chiffrement des mots de passe
+* **Profils riches** — Profils détaillés avec statistiques, préférences et liens sociaux
+* **Contrôle de la vie privée** — Réglages précis de visibilité des profils
 
-### 🤝 **Smart Matching System**
-- **AI-Powered Matching** - Advanced algorithm that matches players based on:
-  - Common games and skill levels
-  - Playing preferences and availability
-  - Geographic location and timezone
-  - Communication preferences
-- **Compatibility Scoring** - Detailed match percentage with explanations
-- **Real-time Notifications** - Instant alerts for new matches and messages
+### 🎮 **Intégration des jeux**
 
-### 💬 **Communication Hub**
-- **Direct Messaging** - Secure, real-time chat system between matched players
-- **Community Forums** - Game-specific discussion boards and general gaming topics
-- **Team Formation** - Create and join gaming teams with integrated communication tools
+* **Support multi-jeux** — Prise en charge des jeux populaires (FPS, MOBA, Battle Royale, etc.)
+* **Suivi des compétences** — Statistiques, rangs et temps de jeu par titre
+* **Bibliothèque de jeux** — Organise et présente ton identité de gamer
 
-### 📊 **Analytics & Insights**
-- **Gaming Statistics** - Comprehensive stats tracking and visualization
-- **Performance Metrics** - Monitor your gaming journey and improvement over time
-- **Community Insights** - Discover trending games and popular players in your region
+### 🤝 **Système de mise en relation intelligent**
 
----
+* **Appariement basé sur l’IA** — Algorithme avancé prenant en compte :
 
-## 🏗️ **Technical Architecture**
+  * Jeux en commun et niveaux de compétence
+  * Préférences et disponibilités
+  * Localisation géographique et fuseau horaire
+  * Préférences de communication
+* **Score de compatibilité** — Pourcentage de correspondance avec explications détaillées
+* **Notifications en temps réel** — Alertes instantanées pour nouveaux matchs et messages
 
-### **Backend Stack**
-- **PHP 8.0+** - Modern PHP with strong typing and performance optimizations
-- **MySQL 8.0** - Robust relational database with advanced features
-- **JWT Authentication** - Stateless, secure token-based authentication
-- **RESTful API** - Clean, documented API following REST principles
-- **Composer** - Dependency management and autoloading
+### 💬 **Espace de communication**
 
-### **Frontend Stack**
-- **React 18.2** - Modern React with hooks and concurrent features
-- **Vite** - Lightning-fast build tool and development server
-- **Tailwind CSS 3.3** - Utility-first CSS framework for rapid UI development
-- **Axios** - Promise-based HTTP client for API communication
-- **Lucide React** - Beautiful, consistent icons
+* **Messagerie directe** — Chat sécurisé en temps réel entre joueurs associés
+* **Forums communautaires** — Discussions spécifiques à chaque jeu et sujets généraux
+* **Formation d’équipes** — Crée ou rejoins des équipes avec des outils intégrés
 
-### **Database Schema**
-- **Normalized Design** - Efficient database structure with proper relationships
-- **Indexing Strategy** - Optimized queries for high performance
-- **Data Integrity** - Comprehensive constraints and validation rules
+### 📊 **Statistiques & analyses**
+
+* **Statistiques de jeu** — Suivi et visualisation détaillés
+* **Indicateurs de performance** — Suivi de ta progression au fil du temps
+* **Tendances communautaires** — Découvre les jeux et joueurs les plus populaires
 
 ---
 
-## 🚀 **Quick Start**
+## 🏗️ **Architecture technique**
 
-### **Prerequisites**
-- PHP 8.0 or higher
-- MySQL 8.0 or higher
-- Node.js 16.0 or higher
-- Composer
-- Git
+### **Backend**
+
+* **PHP 8.0+** — Code moderne, typé et optimisé
+* **MySQL 8.0** — Base de données relationnelle robuste
+* **Authentification JWT** — Sécurisée et sans état
+* **API RESTful** — Architecture claire et documentée
+* **Composer** — Gestionnaire de dépendances PHP
+
+### **Frontend**
+
+* **React 18.2** — Version moderne avec hooks et fonctionnalités concurrentes
+* **Vite** — Outil de build ultra rapide
+* **Tailwind CSS 3.3** — Framework CSS utilitaire pour un développement rapide
+* **Axios** — Client HTTP basé sur les promesses pour les appels API
+* **Lucide React** — Icônes modernes et cohérentes
+
+### **Base de données**
+
+* **Conception normalisée** — Relations optimisées entre tables
+* **Indexation efficace** — Requêtes rapides et performantes
+* **Intégrité des données** — Contraintes et validations complètes
+
+---
+
+## 🚀 **Démarrage rapide**
+
+### **Prérequis**
+
+* PHP 8.0 ou supérieur
+* MySQL 8.0 ou supérieur
+* Node.js 16.0 ou supérieur
+* Composer
+* Git
 
 ### **Installation**
 
-1. **Clone the repository**
+1. **Cloner le dépôt**
+
    ```bash
    git clone https://github.com/yourusername/gameconnect.git
    cd gameconnect
    ```
 
-2. **Backend Setup**
+2. **Configuration du backend**
+
    ```bash
    cd backend
    composer install
-   
-   # Configure environment
+
+   # Configuration de l’environnement
    cp .env.example .env
-   # Edit .env with your database credentials
-   
-   # Setup database
+   # Modifier .env avec vos identifiants de base de données
+
+   # Création de la base
    mysql -u root -p -e "CREATE DATABASE esport_social;"
    mysql -u root -p esport_social < ../database.sql
-   
-   # Start PHP server
+
+   # Lancer le serveur PHP
    php -S localhost:8000
    ```
 
-3. **Frontend Setup**
+3. **Configuration du frontend**
+
    ```bash
    cd frontend
    npm install
-   
-   # Start development server
+
+   # Lancer le serveur de développement
    npm run dev
    ```
 
-4. **Access the Application**
-   - Frontend: http://localhost:5173
-   - Backend API: http://localhost:8000
+4. **Accès à l’application**
+
+   * Frontend : [http://localhost:5173](http://localhost:5173)
+   * Backend API : [http://localhost:8000](http://localhost:8000)
 
 ---
 
 ## 🔧 **Configuration**
 
-### **Environment Variables**
+### **Variables d’environnement**
 
-Create a `.env` file in the `backend` directory:
+Créer un fichier `.env` dans le dossier `backend` :
 
 ```env
-# Database Configuration
+# Configuration base de données
 DB_HOST=127.0.0.1
 DB_USER=root
 DB_PASS=your_password
 DB_NAME=esport_social
 
-# Security
-JWT_SECRET=your_super_secure_secret_key_here
+# Sécurité
+JWT_SECRET=ta_clef_secrète_ultra_sécurisée
 
 # CORS
 CORS_ORIGIN=http://localhost:5173
 ```
 
-### **Database Configuration**
+### **Structure de la base**
 
-The application uses MySQL with the following key tables:
-- `users` - User accounts and authentication
-- `user_profiles` - Extended user information and preferences
-- `games` - Game catalog and metadata
-- `matches` - Player matching system
-- `messages` - Communication between users
-- `forum_*` - Community discussion system
-
----
-
-## 📚 **API Documentation**
-
-### **Authentication Endpoints**
-```http
-POST /api/register    # User registration
-POST /api/login       # User login
-```
-
-### **User Management**
-```http
-GET  /api/profile     # Get user profile
-PUT  /api/profile     # Update user profile
-```
-
-### **Game Management**
-```http
-GET  /api/games       # Get all available games
-GET  /api/user/games  # Get user's games
-POST /api/user/games  # Add game to user profile
-```
-
-### **Matching System**
-```http
-POST /api/matches           # Find new matches
-GET  /api/matches           # Get user's matches
-POST /api/matches/{id}/accept  # Accept a match
-```
-
-### **Messaging**
-```http
-GET  /api/messages          # Get conversations
-GET  /api/messages/{userId} # Get messages with specific user
-POST /api/messages          # Send message
-```
-
-For detailed API documentation, visit our [API Docs](docs/api.md).
+* `users` — Comptes et authentification
+* `user_profiles` — Informations et préférences utilisateur
+* `games` — Catalogue et métadonnées des jeux
+* `matches` — Système de mise en relation
+* `messages` — Communication entre utilisateurs
+* `forum_*` — Discussion communautaire
 
 ---
 
-## 🛣️ **Roadmap**
+## 📚 **Documentation API**
 
-### **Phase 1: Core Features** ✅
-- [x] User authentication and profiles
-- [x] Game library management
-- [x] Basic matching system
-- [x] Direct messaging
+### **Authentification**
 
-### **Phase 2: Enhanced Social Features** 🚧
-- [ ] Real-time notifications
-- [ ] Advanced forum features
-- [ ] Team management system
-- [ ] Tournament organization
+```http
+POST /api/register    # Inscription utilisateur
+POST /api/login       # Connexion utilisateur
+```
 
-### **Phase 3: Advanced Features** 📋
-- [ ] Voice/Video chat integration
-- [ ] Mobile application
-- [ ] Streaming integration (Twitch/YouTube)
-- [ ] AI-powered game recommendations
-- [ ] Esports tournament tracking
+### **Gestion des profils**
 
-### **Phase 4: Platform Expansion** 🔮
-- [ ] Third-party game API integrations
-- [ ] Community events and challenges
-- [ ] Marketplace for gaming services
-- [ ] Advanced analytics dashboard
+```http
+GET  /api/profile     # Récupérer le profil utilisateur
+PUT  /api/profile     # Mettre à jour le profil utilisateur
+```
 
----
+### **Gestion des jeux**
 
-## 🤝 **Contributing**
+```http
+GET  /api/games       # Obtenir tous les jeux disponibles
+GET  /api/user/games  # Obtenir les jeux d’un utilisateur
+POST /api/user/games  # Ajouter un jeu au profil
+```
 
-We welcome contributions from the gaming community! Here's how you can help:
+### **Système de matchmaking**
 
-1. **Fork the Project**
-2. **Create your Feature Branch** (`git checkout -b feature/AmazingFeature`)
-3. **Commit your Changes** (`git commit -m 'Add some AmazingFeature'`)
-4. **Push to the Branch** (`git push origin feature/AmazingFeature`)
-5. **Open a Pull Request**
+```http
+POST /api/matches           # Trouver de nouveaux matchs
+GET  /api/matches           # Obtenir les matchs d’un utilisateur
+POST /api/matches/{id}/accept  # Accepter un match
+```
 
-### **Development Guidelines**
-- Follow PSR-12 coding standards for PHP
-- Use ESLint and Prettier for JavaScript/React code
-- Write meaningful commit messages
-- Add tests for new features
-- Update documentation as needed
+### **Messagerie**
 
-### **Code of Conduct**
-This project adheres to the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
+```http
+GET  /api/messages          # Liste des conversations
+GET  /api/messages/{userId} # Messages avec un utilisateur spécifique
+POST /api/messages          # Envoyer un message
+```
+
+Documentation complète : [Docs API](docs/api.md)
 
 ---
 
-## 🧪 **Testing**
+## 🛣️ **Feuille de route**
 
-### **Backend Tests**
+### **Phase 1 : Fonctionnalités de base** ✅
+
+* [x] Authentification et profils
+* [x] Bibliothèque de jeux
+* [x] Système de matchmaking simple
+* [x] Messagerie directe
+
+### **Phase 2 : Fonctionnalités sociales avancées** 🚧
+
+* [ ] Notifications en temps réel
+* [ ] Forums améliorés
+* [ ] Gestion d’équipes
+* [ ] Organisation de tournois
+
+### **Phase 3 : Fonctionnalités avancées** 📋
+
+* [ ] Chat vocal/vidéo
+* [ ] Application mobile
+* [ ] Intégration Twitch/YouTube
+* [ ] Recommandations de jeux via IA
+* [ ] Suivi des tournois e-sport
+
+### **Phase 4 : Expansion de la plateforme** 🔮
+
+* [ ] Intégration d’API tierces
+* [ ] Événements et défis communautaires
+* [ ] Marketplace de services gaming
+* [ ] Tableau de bord analytique avancé
+
+---
+
+## 🤝 **Contribution**
+
+Tu veux aider au projet ? Voici comment :
+
+1. **Fork le dépôt**
+2. **Crée ta branche** (`git checkout -b feature/NouvelleFonctionnalité`)
+3. **Commit tes changements** (`git commit -m 'Ajout : Nouvelle fonctionnalité'`)
+4. **Push la branche** (`git push origin feature/NouvelleFonctionnalité`)
+5. **Ouvre une Pull Request**
+
+### **Bonnes pratiques**
+
+* Respecter le standard PSR-12 (PHP)
+* Utiliser ESLint & Prettier (JS/React)
+* Rédiger des messages de commit clairs
+* Ajouter des tests pour les nouvelles fonctionnalités
+* Mettre à jour la documentation si nécessaire
+
+### **Code de conduite**
+
+Ce projet suit le [Code de Conduite Contributor Covenant](CODE_OF_CONDUCT.md).
+
+---
+
+## 🧪 **Tests**
+
+### **Backend**
+
 ```bash
 cd backend
 composer test
 ```
 
-### **Frontend Tests**
+### **Frontend**
+
 ```bash
 cd frontend
 npm run test
 ```
 
-### **End-to-End Tests**
+### **End-to-End**
+
 ```bash
 npm run test:e2e
 ```
@@ -270,67 +297,64 @@ npm run test:e2e
 
 ## 📊 **Performance**
 
-- **API Response Time**: < 100ms average
-- **Database Queries**: Optimized with proper indexing
-- **Frontend Bundle**: < 500KB gzipped
-- **Lighthouse Score**: 95+ performance rating
+* **Temps de réponse API** : < 100 ms
+* **Requêtes SQL** : optimisées
+* **Taille du bundle frontend** : < 500 KB gzip
+* **Score Lighthouse** : 95+
 
 ---
 
-## 🔒 **Security**
+## 🔒 **Sécurité**
 
-- **Password Security**: Bcrypt hashing with salt
-- **JWT Tokens**: Secure, stateless authentication
-- **SQL Injection Prevention**: Prepared statements
-- **XSS Protection**: Input sanitization and CSP headers
-- **CORS Configuration**: Strict origin policies
-
----
-
-## 📱 **Browser Support**
-
-| Browser | Version |
-|---------|---------|
-| Chrome  | 88+     |
-| Firefox | 85+     |
-| Safari  | 14+     |
-| Edge    | 88+     |
+* **Mots de passe** : hachage bcrypt + salt
+* **JWT** : authentification sécurisée
+* **Prévention SQLi** : requêtes préparées
+* **Protection XSS** : nettoyage des entrées + CSP
+* **CORS** : politiques strictes
 
 ---
 
-## 📄 **License**
+## 📱 **Navigateurs pris en charge**
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+| Navigateur | Version |
+| ---------- | ------- |
+| Chrome     | 88+     |
+| Firefox    | 85+     |
+| Safari     | 14+     |
+| Edge       | 88+     |
 
 ---
 
-**Moi**
+## 📄 **Licence**
+
+Ce projet est sous licence **MIT** — voir le fichier [LICENSE](LICENSE).
 
 ---
 
-## 🙏 **Acknowledgments**
+## 🙏 **Remerciements**
 
-- [React](https://reactjs.org/) - The web framework used
-- [Tailwind CSS](https://tailwindcss.com/) - For beautiful, responsive design
-- [Lucide](https://lucide.dev/) - For amazing icons
-- [JWT](https://jwt.io/) - For secure authentication
-- Gaming community for inspiration and feedback
+* [React](https://reactjs.org/) — Framework web utilisé
+* [Tailwind CSS](https://tailwindcss.com/) — Pour un design moderne et responsive
+* [Lucide](https://lucide.dev/) — Pour ses icônes élégantes
+* [JWT](https://jwt.io/) — Pour l’authentification sécurisée
+* La **communauté gaming** pour son inspiration et ses retours
 
 ---
 
 ## 📞 **Support**
 
-- **Documentation**: [docs.gameconnect.com](https://docs.gameconnect.com)
-- **Community Forum**: [forum.gameconnect.com](https://forum.gameconnect.com)
-- **Discord Server**: [Join our Discord](https://discord.gg/gameconnect)
-- **Email Support**: support@gameconnect.com
+* **Documentation** : [docs.gameconnect.com](https://docs.gameconnect.com)
+* **Forum communautaire** : [forum.gameconnect.com](https://forum.gameconnect.com)
+* **Serveur Discord** : [Rejoindre le Discord](https://discord.gg/gameconnect)
+* **Support par mail** : [support@gameconnect.com](mailto:support@gameconnect.com)
 
 ---
 
 <div align="center">
 
-**⭐ Star this repository if you found it helpful!**
+**⭐ Mets une étoile si ce projet t’a été utile !**
 
-**Made for gamers, by gamers** 🎮
+**Créé par des gamers, pour les gamers** 🎮
 
 </div>
+

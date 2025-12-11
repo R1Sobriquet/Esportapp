@@ -24,7 +24,7 @@ INSERT IGNORE INTO games (id, name, category, icon_url) VALUES
 -- ============================================================
 -- IMPORTANT: Generate this hash using the test script below
 -- ============================================================
-SET @password_hash = '$2b$12$14xmlPcbCDysPI4yy71IKuraitxSEs8gkHFJ7CDr5PZKUjKZHcwoG';
+SET @password_hash = '$2b$12$STne7AQ3I5IjcfVdkS796O45v6V533ianf0t7LTZR1Md8mTYNvGhi';
 
 -- ============================================================
 -- Insert Test Users
