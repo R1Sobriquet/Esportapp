@@ -1,8 +1,13 @@
+/**
+ * Messages Page Component
+ * Handles conversations and messaging between users
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { messagesAPI } from '../src/services/api';
-import { useAuth } from '../src/contexts/AuthContext';
-import Avatar from '../src/components/Avatar';
+import { useAuth } from '../contexts/AuthContext';
+import { messagesAPI } from '../services';
+import { Avatar } from '../components';
 
 export default function Messages() {
   const { user } = useAuth();

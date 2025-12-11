@@ -1,6 +1,11 @@
+/**
+ * Register Page Component
+ * Handles new user registration with multi-step form
+ */
+
 import React, { useState } from 'react';
-import { useAuth } from '../src/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Register() {
   const { register } = useAuth();

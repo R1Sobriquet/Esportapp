@@ -1,7 +1,12 @@
+/**
+ * Profile Page Component
+ * Displays and allows editing of user profile
+ */
+
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../src/contexts/AuthContext';
-import { profileAPI, gamesAPI } from '../src/services/api';
-import Avatar from '../src/components/Avatar';
+import { useAuth } from '../contexts/AuthContext';
+import { profileAPI, gamesAPI } from '../services';
+import { Avatar } from '../components';
 
 export default function Profile() {
   const { user } = useAuth();

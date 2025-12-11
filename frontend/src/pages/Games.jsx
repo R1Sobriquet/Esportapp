@@ -1,6 +1,11 @@
+/**
+ * Games Page Component
+ * Manages user's game library
+ */
+
 import React, { useEffect, useState } from "react";
-import { gamesAPI } from "../src/services/api";
-import { useAuth } from "../src/contexts/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
+import { gamesAPI } from "../services";
 
 export default function Games() {
   const { user } = useAuth();
