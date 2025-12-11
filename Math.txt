@@ -1,0 +1,15 @@
+Au lycée(Optionnel)
+
+Choisir la spécialité NSI (Numérique et Sciences Informatiques) ou suivre l'option ICN pour découvrir la programmation.
+
+Après le bac
+
+Plusieurs voies possibles : BTS SIO, BUT Informatique, écoles spécialisées (42, Epitech, Web@cademy) ou formation universitaire en informatique.
+
+En autodidacte
+
+Nombreuses ressources gratuites en ligne (OpenClassrooms, freeCodeCamp, YouTube). Les bootcamps intensifs sont aussi une option (3 à 6 mois).
+
+Pratiquer !
+
+Créer ses propres projets, contribuer à des projets open-source, et construire un portfolio pour montrer ses compétences aux recruteurs.
