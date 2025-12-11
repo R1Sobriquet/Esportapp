@@ -1,6 +1,11 @@
+/**
+ * Forum Page Component
+ * Community forums for discussions (placeholder - not yet implemented in backend)
+ */
+
 import React, { useState, useEffect } from 'react';
-import { forumAPI } from '../src/services/api';
-import { useAuth } from '../src/contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
+import { forumAPI } from '../services';
 
 export default function Forum() {
   const { user } = useAuth();

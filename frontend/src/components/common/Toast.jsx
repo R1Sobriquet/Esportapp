@@ -1,4 +1,8 @@
-// frontend/src/components/Toast.jsx
+/**
+ * Toast Notification Component
+ * Displays beautiful toast notifications with progress bar
+ */
+
 import React, { useState, useEffect } from 'react';
 
 const Toast = ({ message, type = 'success', duration = 4000, onClose }) => {
@@ -109,5 +113,8 @@ export const ToastContainer = ({ toasts, removeToast }) => {
     </div>
   );
 };
+
+// Default export with ToastContainer attached
+Toast.ToastContainer = ToastContainer;
 
 export default Toast;

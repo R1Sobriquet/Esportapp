@@ -1,8 +1,12 @@
-// frontend/pages/Home.jsx - Avec nouveau design
+/**
+ * Home Page Component
+ * Dashboard for authenticated users, landing page for guests
+ */
+
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../src/contexts/AuthContext';
-import { matchingAPI, gamesAPI } from '../src/services/api';
-import WelcomeMessage from '../src/components/WelcomeMessage';
+import { useAuth } from '../contexts/AuthContext';
+import { matchingAPI, gamesAPI } from '../services';
+import { WelcomeMessage } from '../components';
 
 export default function Home() {
   const { user } = useAuth();

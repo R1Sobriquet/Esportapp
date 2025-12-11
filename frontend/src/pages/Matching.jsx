@@ -1,10 +1,16 @@
+/**
+ * Matching Page Component
+ * Handles player discovery and match management
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { matchingAPI, gamesAPI } from '../src/services/api';
-import { useAuth } from '../src/contexts/AuthContext';
-import Avatar from '../src/components/Avatar';
-import { ToastContainer } from '../src/components/Toast';
-import { useToast } from '../src/hooks/useToast';
+import { useAuth } from '../contexts/AuthContext';
+import { matchingAPI, gamesAPI } from '../services';
+import { Avatar, Toast } from '../components';
+import { useToast } from '../hooks/useToast';
+
+const { ToastContainer } = Toast;
 
 export default function Matching() {
   const { user } = useAuth();
