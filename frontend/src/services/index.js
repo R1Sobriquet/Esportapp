@@ -10,3 +10,4 @@ export { gamesAPI } from './games';
 export { matchingAPI } from './matching';
 export { messagesAPI } from './messages';
 export { forumAPI } from './forum';
+export { statsAPI } from './stats';
