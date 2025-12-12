@@ -3,94 +3,50 @@ Matching routes.
 Handles player matching and match management.
 """
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 
 from ..services.auth import get_current_user_id
+from ..services.matching import find_matches_advanced, create_match_record
 from ..database import DatabaseSession
 
 router = APIRouter()
 
 
 @router.post("/matches")
-def find_matches(user_id: int = Depends(get_current_user_id)):
+def find_matches(
+    user_id: int = Depends(get_current_user_id),
+    limit: int = Query(default=10, le=20),
+):
     """
     Find potential matches for the current user.
 
-    Searches for users with common games and creates match records.
+    Uses advanced weighted scoring algorithm considering:
+    - Common games (30 pts each, max 60)
+    - Game skill compatibility (up to 30 pts)
+    - Overall skill level match (up to 20 pts)
+    - Same region bonus (15 pts)
+    - Same timezone bonus (up to 10 pts)
+    - Compatible playstyle (up to 15 pts)
     """
-    with DatabaseSession(dict_cursor=True) as db:
-        # Get user's games
-        db.execute(
-            "SELECT game_id, skill_level FROM user_games WHERE user_id = %s",
-            (user_id,),
-        )
-        user_games = db.fetchall()
+    # Use advanced matching algorithm
+    potential_matches = find_matches_advanced(user_id, limit=limit)
 
-        if not user_games:
-            return {"matches": [], "message": "Add games to your profile to find matches"}
+    if not potential_matches:
+        # Check if user has games
+        with DatabaseSession(dict_cursor=True) as db:
+            db.execute("SELECT COUNT(*) as count FROM user_games WHERE user_id = %s", (user_id,))
+            if db.fetchone()["count"] == 0:
+                return {"matches": [], "message": "Ajoute des jeux à ton profil pour trouver des matchs"}
+            return {"matches": [], "message": "Aucun nouveau match disponible pour le moment"}
 
-        game_ids = [g["game_id"] for g in user_games]
-        placeholders = ",".join(["%s"] * len(game_ids))
+    # Create match records and build response
+    matches = []
+    for match in potential_matches:
+        match_id = create_match_record(user_id, match["user_id"], match["match_score"])
+        match["match_id"] = match_id
+        matches.append(match)
 
-        # Find potential matches
-        query = f"""
-            SELECT DISTINCT
-                u.id as user_id,
-                u.username,
-                p.avatar_url,
-                p.bio,
-                p.skill_level,
-                p.looking_for,
-                p.timezone,
-                p.region,
-                GROUP_CONCAT(DISTINCT g.name) as games,
-                COUNT(DISTINCT ug.game_id) as common_game_count
-            FROM users u
-            JOIN user_profiles p ON u.id = p.user_id
-            JOIN user_games ug ON u.id = ug.user_id
-            JOIN games g ON ug.game_id = g.id
-            WHERE u.id != %s
-                AND p.profile_visibility != 'private'
-                AND ug.game_id IN ({placeholders})
-                AND u.id NOT IN (
-                    SELECT CASE
-                        WHEN user1_id = %s THEN user2_id
-                        ELSE user1_id
-                    END
-                    FROM matches
-                    WHERE (user1_id = %s OR user2_id = %s)
-                    AND status IN ('accepted', 'pending')
-                )
-            GROUP BY u.id
-            ORDER BY common_game_count DESC
-            LIMIT 10
-        """
-
-        params = [user_id] + game_ids + [user_id, user_id, user_id]
-        db.execute(query, params)
-        potential_matches = db.fetchall()
-
-        # Calculate match scores and create match records
-        matches = []
-        for match in potential_matches:
-            # Simple scoring based on common games
-            score = min(100, match["common_game_count"] * 25)
-
-            # Create match record
-            db.execute(
-                """
-                INSERT INTO matches (user1_id, user2_id, match_score, status)
-                VALUES (%s, %s, %s, 'pending')
-                ON DUPLICATE KEY UPDATE match_score = VALUES(match_score)
-                """,
-                (user_id, match["user_id"], score),
-            )
-
-            match["match_score"] = score
-            match["match_id"] = db.lastrowid
-            matches.append(match)
-
-        return {"matches": matches}
+    return {"matches": matches}
 
 
 @router.get("/matches")
