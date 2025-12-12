@@ -8,6 +8,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 // Context providers
 import { AuthProvider } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 
 // Layout components
 import { Navigation, Footer } from './components';
@@ -27,26 +28,28 @@ import Legal from './pages/Legal';
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <div className="min-h-screen bg-gray-900 flex flex-col">
-          <Navigation />
-          <main className="flex-grow">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/games" element={<Games />} />
-              <Route path="/matching" element={<Matching />} />
-              <Route path="/messages" element={<Messages />} />
-              <Route path="/terms" element={<Terms />} />
-              <Route path="/privacy" element={<Privacy />} />
-              <Route path="/legal" element={<Legal />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
-      </Router>
+      <ToastProvider>
+        <Router>
+          <div className="min-h-screen bg-gray-900 flex flex-col">
+            <Navigation />
+            <main className="flex-grow">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/games" element={<Games />} />
+                <Route path="/matching" element={<Matching />} />
+                <Route path="/messages" element={<Messages />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/legal" element={<Legal />} />
+              </Routes>
+            </main>
+            <Footer />
+          </div>
+        </Router>
+      </ToastProvider>
     </AuthProvider>
   );
 }
