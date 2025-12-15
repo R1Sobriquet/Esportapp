@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { SearchBar, NotificationBell, Avatar } from '../common';
+import { SearchBar, NotificationBell, Avatar, ThemeToggle } from '../common';
 
 export default function Navigation() {
   const { user, logout } = useAuth();
@@ -60,6 +60,9 @@ export default function Navigation() {
                   Messages
                 </Link>
 
+                {/* Theme Toggle */}
+                <ThemeToggle />
+
                 {/* Notifications */}
                 <NotificationBell />
 
@@ -90,6 +93,7 @@ export default function Navigation() {
               </>
             ) : (
               <>
+                <ThemeToggle />
                 <Link
                   to="/login"
                   className="text-gray-300 hover:text-primary-light transition-colors px-4 py-2"
@@ -125,6 +129,12 @@ export default function Navigation() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden pb-4 animate-slide-down">
+            {/* Theme Toggle - Mobile */}
+            <div className="flex items-center justify-between mb-4 px-3 py-2">
+              <span className="text-gray-400 text-sm">Theme</span>
+              <ThemeToggle />
+            </div>
+
             {/* Search Bar - Mobile */}
             {user && (
               <div className="mb-4">
