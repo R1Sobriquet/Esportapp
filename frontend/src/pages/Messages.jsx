@@ -130,6 +130,17 @@ export default function Messages() {
     return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
   };
 
+  const handleDeleteMessage = async (messageId) => {
+    try {
+      await messagesAPI.deleteMessage(messageId);
+      setMessages(prev => prev.filter(m => m.id !== messageId));
+      // Refresh conversations to update last_message
+      loadConversations();
+    } catch (err) {
+      showError('Impossible de supprimer le message');
+    }
+  };
+
   const handleBackToList = () => {
     setShowSidebar(true);
     setSelectedConversation(null);
@@ -291,9 +302,21 @@ export default function Messages() {
                     return (
                       <div
                         key={msg.id}
-                        className={`flex ${mine ? 'justify-end' : 'justify-start'} animate-fade-in`}
+                        className={`flex ${mine ? 'justify-end' : 'justify-start'} animate-fade-in group`}
                         style={{ animationDelay: `${index * 30}ms` }}
                       >
+                        {/* Bouton suppression — affiché au survol, uniquement pour mes messages */}
+                        {mine && !msg.pending && (
+                          <button
+                            onClick={() => handleDeleteMessage(msg.id)}
+                            className="self-center mr-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-full hover:bg-gray-700/60 text-gray-500 hover:text-red-400"
+                            title="Supprimer le message"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        )}
                         <div className={`max-w-[75%] sm:max-w-xs lg:max-w-md ${mine ? 'order-2' : 'order-1'}`}>
                           {!mine && (
                             <Avatar src={msg.sender_avatar} username={msg.sender_username} size={32} className="mb-1" />
