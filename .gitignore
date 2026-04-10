@@ -98,3 +98,4 @@ htmlcov/
 
 # Documentation générée
 docs/_build/
+docs/pdf/
