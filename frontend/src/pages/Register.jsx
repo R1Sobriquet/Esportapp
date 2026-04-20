@@ -1,70 +1,44 @@
-/**
- * Register Page Component
- * Handles new user registration with multi-step form
- */
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+
+const INPUT = 'w-full px-4 py-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400 dark:focus:ring-neon-cyan/60 focus:border-transparent transition-all text-sm';
+const LABEL = 'block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide';
 
 export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
-    // Account info
-    email: '',
-    username: '',
-    password: '',
-    confirmPassword: '',
-    // Profile info
-    region: '',
-    date_of_birth: '',
-    bio: '',
-    discord_username: '',
-    skill_level: 'beginner',
-    looking_for: 'teammates'
+    email: '', username: '', password: '', confirmPassword: '',
+    region: '', date_of_birth: '', bio: '', discord_username: '',
+    skill_level: 'beginner', looking_for: 'teammates'
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
   const validateStep1 = () => {
     if (!formData.email || !formData.username || !formData.password) {
-      setError('Tous les champs sont requis');
-      return false;
+      setError('Tous les champs sont requis'); return false;
     }
     if (formData.password !== formData.confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
-      return false;
+      setError('Les mots de passe ne correspondent pas'); return false;
     }
     if (formData.password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères');
-      return false;
+      setError('Le mot de passe doit contenir au moins 6 caractères'); return false;
     }
-    setError('');
-    return true;
+    setError(''); return true;
   };
 
-  const handleNextStep = () => {
-    if (validateStep1()) {
-      setCurrentStep(2);
-    }
-  };
+  const handleNextStep = () => { if (validateStep1()) setCurrentStep(2); };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
-    const registrationData = {
+    const result = await register({
       email: formData.email,
       username: formData.username,
       password: formData.password,
@@ -79,16 +53,9 @@ export default function Register() {
         show_stats: true,
         allow_friend_requests: true
       }
-    };
-
-    const result = await register(registrationData);
-
-    if (result.success) {
-      navigate('/');
-    } else {
-      setError(result.error || 'Échec de l\'inscription');
-    }
-
+    });
+    if (result.success) navigate('/');
+    else setError(result.error || 'Échec de l\'inscription');
     setLoading(false);
   };
 
@@ -96,273 +63,192 @@ export default function Register() {
     { value: 'beginner', label: 'Débutant', description: 'Je commence à jouer' },
     { value: 'intermediate', label: 'Intermédiaire', description: 'Je connais les bases' },
     { value: 'advanced', label: 'Avancé', description: 'Joueur compétitif' },
-    { value: 'expert', label: 'Expert', description: 'Niveau pro' }
+    { value: 'expert', label: 'Expert', description: 'Niveau pro' },
   ];
 
   const lookingForOptions = [
     { value: 'teammates', label: 'Coéquipiers', icon: '🎮' },
     { value: 'mentor', label: 'Mentor', icon: '🎓' },
     { value: 'casual_friends', label: 'Amis Casual', icon: '😊' },
-    { value: 'competitive_team', label: 'Équipe Compétitive', icon: '🏆' }
+    { value: 'competitive_team', label: 'Équipe Compétitive', icon: '🏆' },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-primary-darkest to-gray-950 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold bg-gradient-to-r from-primary-light via-primary to-primary-dark bg-clip-text text-transparent">
-            Créer ton compte
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-400">
-            Rejoins la communauté gaming
-          </p>
+    <div className="min-h-screen bg-slate-50 dark:bg-gaming-dark flex items-center justify-center py-12 px-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/8 rounded-3xl shadow-glass-light dark:shadow-glass p-8 animate-fade-in">
 
-          {/* Progress indicator */}
-          <div className="mt-6 flex justify-center space-x-2">
-            <div className={`h-2 w-16 rounded ${currentStep >= 1 ? 'bg-gradient-primary shadow-glow-red' : 'bg-gray-700'}`} />
-            <div className={`h-2 w-16 rounded ${currentStep >= 2 ? 'bg-gradient-primary shadow-glow-red' : 'bg-gray-700'}`} />
-          </div>
-        </div>
+          {/* Header */}
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-extrabold text-slate-800 dark:text-white">Créer ton compte</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Rejoins la communauté gaming</p>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {currentStep === 1 ? (
-            /* Step 1: Account Information */
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-white mb-4">Informations du compte</h3>
-
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-300">
-                  Adresse email
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent transition-all"
-                  placeholder="ton@email.com"
+            {/* Progress bar */}
+            <div className="flex gap-2 justify-center mt-5">
+              {[1, 2].map(step => (
+                <div
+                  key={step}
+                  className={`h-1.5 w-20 rounded-full transition-all duration-500 ${
+                    currentStep >= step
+                      ? 'bg-gradient-neon shadow-glow-cyan'
+                      : 'bg-slate-200 dark:bg-white/10'
+                  }`}
                 />
-              </div>
-
-              <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-300">
-                  Nom d'utilisateur
-                </label>
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  autoComplete="username"
-                  required
-                  value={formData.username}
-                  onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent transition-all"
-                  placeholder="Choisis un pseudo unique"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-300">
-                  Mot de passe
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent transition-all"
-                  placeholder="Au moins 6 caractères"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300">
-                  Confirmer le mot de passe
-                </label>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent transition-all"
-                  placeholder="Confirme ton mot de passe"
-                />
-              </div>
-
-              {error && (
-                <div className="bg-primary/20 border border-primary/50 rounded-md p-3">
-                  <p className="text-primary-light text-sm">{error}</p>
-                </div>
-              )}
-
-              <button
-                type="button"
-                onClick={handleNextStep}
-                className="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-primary hover:shadow-glow-red-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-light transition-all transform hover:scale-[1.02] shadow-glow-red"
-              >
-                Étape suivante
-              </button>
+              ))}
             </div>
-          ) : (
-            /* Step 2: Profile Information */
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-white mb-4">Informations du profil</h3>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">Étape {currentStep} / 2</p>
+          </div>
 
-              <div>
-                <label htmlFor="region" className="block text-sm font-medium text-gray-300">
-                  Région
-                </label>
-                <input
-                  id="region"
-                  name="region"
-                  type="text"
-                  value={formData.region}
-                  onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent transition-all"
-                  placeholder="ex: Europe, NA, Asie"
-                />
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {currentStep === 1 ? (
+              <>
+                <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">Informations du compte</h3>
 
-              <div>
-                <label htmlFor="date_of_birth" className="block text-sm font-medium text-gray-300">
-                  Date de naissance
-                </label>
-                <input
-                  id="date_of_birth"
-                  name="date_of_birth"
-                  type="date"
-                  value={formData.date_of_birth}
-                  onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent transition-all"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="discord_username" className="block text-sm font-medium text-gray-300">
-                  Pseudo Discord (Optionnel)
-                </label>
-                <input
-                  id="discord_username"
-                  name="discord_username"
-                  type="text"
-                  value={formData.discord_username}
-                  onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent transition-all"
-                  placeholder="TonNom#1234"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="bio" className="block text-sm font-medium text-gray-300">
-                  Bio (Optionnel)
-                </label>
-                <textarea
-                  id="bio"
-                  name="bio"
-                  rows={3}
-                  value={formData.bio}
-                  onChange={handleChange}
-                  className="mt-1 block w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent transition-all"
-                  placeholder="Parle-nous de toi et de ton style de jeu..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Niveau de compétence
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {skillLevels.map(level => (
-                    <button
-                      key={level.value}
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, skill_level: level.value }))}
-                      className={`p-3 rounded-lg border text-left transition-all ${
-                        formData.skill_level === level.value
-                          ? 'bg-gradient-primary border-primary-light shadow-glow-red'
-                          : 'bg-gray-900/80 border-primary/20 hover:border-primary-light/40'
-                      }`}
-                    >
-                      <div className="font-medium text-white">{level.label}</div>
-                      <div className="text-xs text-gray-400">{level.description}</div>
-                    </button>
-                  ))}
+                <div>
+                  <label className={LABEL}>Adresse email</label>
+                  <input name="email" type="email" autoComplete="email" required value={formData.email} onChange={handleChange} className={INPUT} placeholder="ton@email.com" />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Je recherche
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {lookingForOptions.map(option => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, looking_for: option.value }))}
-                      className={`p-3 rounded-lg border text-center transition-all ${
-                        formData.looking_for === option.value
-                          ? 'bg-gradient-to-br from-green-600 to-green-500 border-green-500 shadow-lg shadow-green-500/50'
-                          : 'bg-gray-900/80 border-primary/20 hover:border-primary-light/40'
-                      }`}
-                    >
-                      <div className="text-2xl mb-1">{option.icon}</div>
-                      <div className="text-sm text-white">{option.label}</div>
-                    </button>
-                  ))}
+                <div>
+                  <label className={LABEL}>Nom d'utilisateur</label>
+                  <input name="username" type="text" autoComplete="username" required value={formData.username} onChange={handleChange} className={INPUT} placeholder="Choisis un pseudo unique" />
                 </div>
-              </div>
-
-              {error && (
-                <div className="bg-primary/20 border border-primary/50 rounded-md p-3">
-                  <p className="text-primary-light text-sm">{error}</p>
+                <div>
+                  <label className={LABEL}>Mot de passe</label>
+                  <input name="password" type="password" autoComplete="new-password" required value={formData.password} onChange={handleChange} className={INPUT} placeholder="Au moins 6 caractères" />
                 </div>
-              )}
+                <div>
+                  <label className={LABEL}>Confirmer le mot de passe</label>
+                  <input name="confirmPassword" type="password" autoComplete="new-password" required value={formData.confirmPassword} onChange={handleChange} className={INPUT} placeholder="Confirme ton mot de passe" />
+                </div>
 
-              <div className="flex gap-3">
+                {error && (
+                  <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl p-3">
+                    <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+                  </div>
+                )}
+
                 <button
                   type="button"
-                  onClick={() => setCurrentStep(1)}
-                  className="flex-1 py-3 px-4 border border-primary/30 text-sm font-medium rounded-md text-gray-300 bg-gray-900/80 hover:bg-gray-800/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
+                  onClick={handleNextStep}
+                  className="w-full bg-gradient-neon py-3 rounded-xl font-bold text-white shadow-glow-cyan hover:shadow-glow-cyan-lg transition-all hover:scale-[1.02] mt-2"
                 >
-                  Retour
+                  Étape suivante →
                 </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-br from-green-600 to-green-500 hover:shadow-lg hover:shadow-green-500/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02]"
-                >
-                  {loading ? (
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Création...
-                    </div>
-                  ) : (
-                    'Créer le compte'
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
+              </>
+            ) : (
+              <>
+                <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">Informations du profil</h3>
 
-          <div className="text-center">
-            <p className="text-gray-400">
-              Tu as déjà un compte ?{' '}
-              <a href="/login" className="text-primary-light hover:text-white font-medium transition-colors">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={LABEL}>Région</label>
+                    <input name="region" type="text" value={formData.region} onChange={handleChange} className={INPUT} placeholder="Europe, NA..." />
+                  </div>
+                  <div>
+                    <label className={LABEL}>Date de naissance</label>
+                    <input name="date_of_birth" type="date" value={formData.date_of_birth} onChange={handleChange} className={INPUT} />
+                  </div>
+                </div>
+
+                <div>
+                  <label className={LABEL}>Discord (optionnel)</label>
+                  <input name="discord_username" type="text" value={formData.discord_username} onChange={handleChange} className={INPUT} placeholder="TonNom#1234" />
+                </div>
+
+                <div>
+                  <label className={LABEL}>Bio (optionnel)</label>
+                  <textarea
+                    name="bio"
+                    rows={2}
+                    value={formData.bio}
+                    onChange={handleChange}
+                    className={INPUT + ' resize-none'}
+                    placeholder="Parle-nous de toi..."
+                  />
+                </div>
+
+                {/* Skill Level */}
+                <div>
+                  <label className={LABEL}>Niveau de compétence</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {skillLevels.map(level => (
+                      <button
+                        key={level.value}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, skill_level: level.value }))}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          formData.skill_level === level.value
+                            ? 'bg-gradient-neon border-transparent shadow-glow-cyan'
+                            : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:border-sky-300 dark:hover:border-neon-cyan/30'
+                        }`}
+                      >
+                        <div className="font-semibold text-sm text-slate-800 dark:text-white">{level.label}</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{level.description}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Looking For */}
+                <div>
+                  <label className={LABEL}>Je recherche</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {lookingForOptions.map(option => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, looking_for: option.value }))}
+                        className={`p-3 rounded-xl border text-center transition-all ${
+                          formData.looking_for === option.value
+                            ? 'bg-gradient-to-br from-emerald-500 to-green-400 border-transparent shadow-lg shadow-emerald-400/30'
+                            : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:border-sky-300 dark:hover:border-neon-cyan/30'
+                        }`}
+                      >
+                        <div className="text-xl mb-1">{option.icon}</div>
+                        <div className="text-xs font-semibold text-slate-800 dark:text-white">{option.label}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl p-3">
+                    <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(1)}
+                    className="flex-1 py-3 px-4 border border-slate-200 dark:border-white/10 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-white/5 hover:border-slate-300 dark:hover:border-white/20 transition-all"
+                  >
+                    ← Retour
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex-1 py-3 px-4 bg-gradient-to-br from-emerald-500 to-green-400 rounded-xl text-sm font-bold text-white shadow-lg shadow-emerald-400/30 hover:shadow-emerald-400/50 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all"
+                  >
+                    {loading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Création...
+                      </span>
+                    ) : 'Créer le compte ✓'}
+                  </button>
+                </div>
+              </>
+            )}
+
+            <p className="text-center text-sm text-slate-500 dark:text-slate-400 pt-1">
+              Déjà un compte ?{' '}
+              <a href="/login" className="text-sky-600 dark:text-neon-cyan hover:text-neon-violet font-semibold transition-colors">
                 Connecte-toi ici
               </a>
             </p>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );

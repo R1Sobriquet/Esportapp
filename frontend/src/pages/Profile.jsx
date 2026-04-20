@@ -1,27 +1,25 @@
-/**
- * Profile Page Component
- * Displays and allows editing of user profile with avatar and banner support
- */
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { profileAPI, gamesAPI } from '../services';
 import { Avatar, ImageSelector } from '../components';
 
-// Skill level labels with colors
 const SKILL_LEVELS = {
-  beginner: { label: 'Débutant', color: 'text-green-400', bg: 'bg-green-500/20', border: 'border-green-500/20' },
-  intermediate: { label: 'Intermédiaire', color: 'text-blue-400', bg: 'bg-blue-500/20', border: 'border-blue-500/20' },
-  advanced: { label: 'Avancé', color: 'text-purple-400', bg: 'bg-purple-500/20', border: 'border-purple-500/20' },
-  expert: { label: 'Expert', color: 'text-yellow-400', bg: 'bg-yellow-500/20', border: 'border-yellow-500/20' }
+  beginner:     { label: 'Débutant',      color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-500/10', border: 'border-emerald-200 dark:border-emerald-500/20' },
+  intermediate: { label: 'Intermédiaire', color: 'text-sky-600 dark:text-sky-400',         bg: 'bg-sky-50 dark:bg-sky-500/10',         border: 'border-sky-200 dark:border-sky-500/20' },
+  advanced:     { label: 'Avancé',        color: 'text-violet-600 dark:text-violet-400',   bg: 'bg-violet-50 dark:bg-violet-500/10',   border: 'border-violet-200 dark:border-violet-500/20' },
+  expert:       { label: 'Expert',        color: 'text-amber-600 dark:text-amber-400',     bg: 'bg-amber-50 dark:bg-amber-500/10',     border: 'border-amber-200 dark:border-amber-500/20' }
 };
 
 const LOOKING_FOR_LABELS = {
-  teammates: 'Coéquipiers',
-  mentor: 'Un mentor',
-  casual_friends: 'Amis casual',
+  teammates:        'Coéquipiers',
+  mentor:           'Un mentor',
+  casual_friends:   'Amis casual',
   competitive_team: 'Équipe compétitive'
 };
+
+const CARD = 'bg-white dark:bg-white/5 backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/8 shadow-sm dark:shadow-glass';
+const INPUT = 'w-full px-4 py-2.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400 dark:focus:ring-neon-cyan/60 focus:border-transparent transition-all text-sm';
+const LABEL = 'block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide';
 
 export default function Profile() {
   const { user } = useAuth();
@@ -34,13 +32,7 @@ export default function Profile() {
   const [editForm, setEditForm] = useState({});
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
-  // Image selector state
-  const [imageSelector, setImageSelector] = useState({
-    isOpen: false,
-    type: 'avatar' // 'avatar' or 'banner'
-  });
-
-  // Game editor state
+  const [imageSelector, setImageSelector] = useState({ isOpen: false, type: 'avatar' });
   const [editingGame, setEditingGame] = useState(null);
   const [gameEditForm, setGameEditForm] = useState({});
   const [savingGame, setSavingGame] = useState(false);
@@ -54,10 +46,7 @@ export default function Profile() {
   };
 
   useEffect(() => {
-    if (user) {
-      loadProfile();
-      loadAllGames();
-    }
+    if (user) { loadProfile(); loadAllGames(); }
   }, [user]);
 
   const loadProfile = async () => {
@@ -65,10 +54,7 @@ export default function Profile() {
       const response = await profileAPI.getProfile();
       setProfile(response.data.profile);
       setGames(response.data.games);
-      setEditForm({
-        ...response.data.profile,
-        preferences: response.data.preferences
-      });
+      setEditForm({ ...response.data.profile, preferences: response.data.preferences });
     } catch (error) {
       console.error('Failed to load profile:', error);
       showToast('Erreur lors du chargement du profil', 'error');
@@ -88,7 +74,6 @@ export default function Profile() {
 
   const handleEditChange = (e) => {
     const { name, value, type, checked } = e.target;
-
     if (name.startsWith('preferences.')) {
       const prefKey = name.split('.')[1];
       setEditForm(prev => ({
@@ -103,17 +88,13 @@ export default function Profile() {
         }
       }));
     } else {
-      setEditForm(prev => ({
-        ...prev,
-        [name]: type === 'checkbox' ? checked : value
-      }));
+      setEditForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     }
   };
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     setSaving(true);
-
     try {
       await profileAPI.updateProfile(editForm);
       await loadProfile();
@@ -129,15 +110,10 @@ export default function Profile() {
 
   const handleImageSelect = (imageUrl) => {
     const field = imageSelector.type === 'avatar' ? 'avatar_url' : 'banner_url';
-    setEditForm(prev => ({
-      ...prev,
-      [field]: imageUrl
-    }));
+    setEditForm(prev => ({ ...prev, [field]: imageUrl }));
   };
 
-  const openImageSelector = (type) => {
-    setImageSelector({ isOpen: true, type });
-  };
+  const openImageSelector = (type) => setImageSelector({ isOpen: true, type });
 
   const openGameEditor = (game) => {
     setEditingGame(game);
@@ -152,10 +128,7 @@ export default function Profile() {
 
   const handleGameEditChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setGameEditForm(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+    setGameEditForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
   const handleSaveGame = async () => {
@@ -175,11 +148,7 @@ export default function Profile() {
 
   const addGameToProfile = async (gameId) => {
     try {
-      await gamesAPI.addUserGame({
-        game_id: gameId,
-        skill_level: 'beginner',
-        is_favorite: false
-      });
+      await gamesAPI.addUserGame({ game_id: gameId, skill_level: 'beginner', is_favorite: false });
       await loadProfile();
       showToast('Jeu ajouté !', 'success');
     } catch (error) {
@@ -190,10 +159,10 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-primary-darkest to-gray-950 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-gaming-dark flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-light mx-auto mb-4"></div>
-          <p className="text-gray-400">Chargement du profil...</p>
+          <div className="w-12 h-12 border-2 border-sky-500 dark:border-neon-cyan border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-slate-500 dark:text-slate-400 text-sm">Chargement du profil...</p>
         </div>
       </div>
     );
@@ -201,10 +170,10 @@ export default function Profile() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-primary-darkest to-gray-950 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-gaming-dark flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl mb-4">Profil introuvable</h2>
-          <p className="text-gray-400">Une erreur est survenue lors du chargement de ton profil.</p>
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Profil introuvable</h2>
+          <p className="text-slate-500 dark:text-slate-400">Une erreur est survenue lors du chargement de ton profil.</p>
         </div>
       </div>
     );
@@ -213,24 +182,24 @@ export default function Profile() {
   const skillInfo = SKILL_LEVELS[profile.skill_level] || SKILL_LEVELS.beginner;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-primary-darkest to-gray-950 text-white">
-      {/* Toast Notification */}
+    <div className="min-h-screen bg-slate-50 dark:bg-gaming-dark">
+      {/* Toast */}
       {toast.show && (
-        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 ${
-          toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+        <div className={`fixed top-28 right-4 z-50 px-5 py-3 rounded-xl shadow-lg border animate-fade-in flex items-center gap-2 text-sm font-medium ${
+          toast.type === 'success'
+            ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+            : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400'
         }`}>
-          <div className="flex items-center gap-2">
-            {toast.type === 'success' ? (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            )}
-            {toast.message}
-          </div>
+          {toast.type === 'success' ? (
+            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          )}
+          {toast.message}
         </div>
       )}
 
@@ -245,45 +214,37 @@ export default function Profile() {
 
       {/* Game Edit Modal */}
       {editingGame && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-6 border border-primary/20 shadow-lg w-full max-w-md">
-            <h3 className="text-xl font-bold mb-6 bg-gradient-to-r from-primary-light to-primary bg-clip-text text-transparent">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className={`${CARD} p-6 w-full max-w-md animate-fade-in`}>
+            <h3 className="text-lg font-bold mb-5 bg-gradient-to-r from-sky-500 to-neon-violet dark:from-neon-cyan dark:to-neon-violet bg-clip-text text-transparent">
               Modifier — {editingGame.name}
             </h3>
 
             <div className="space-y-4">
-              {/* Niveau */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Niveau</label>
-                <select
-                  name="skill_level"
-                  value={gameEditForm.skill_level}
-                  onChange={handleGameEditChange}
-                  className="w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-light transition-all"
-                >
+                <label className={LABEL}>Niveau</label>
+                <select name="skill_level" value={gameEditForm.skill_level} onChange={handleGameEditChange} className={INPUT}>
                   {skillLevels.map(level => (
                     <option key={level} value={level}>{SKILL_LEVELS[level].label}</option>
                   ))}
                 </select>
               </div>
 
-              {/* Rang */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Rang <span className="text-gray-500">(optionnel)</span></label>
+                <label className={LABEL}>Rang <span className="normal-case font-normal">(optionnel)</span></label>
                 <input
                   type="text"
                   name="game_rank"
                   value={gameEditForm.game_rank}
                   onChange={handleGameEditChange}
-                  placeholder="ex : Gold III, Diamond, Global Elite"
+                  placeholder="Gold III, Diamond, Global Elite…"
                   maxLength={100}
-                  className="w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-light transition-all"
+                  className={INPUT}
                 />
               </div>
 
-              {/* Heures jouées */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Heures jouées</label>
+                <label className={LABEL}>Heures jouées</label>
                 <input
                   type="number"
                   name="hours_played"
@@ -291,38 +252,36 @@ export default function Profile() {
                   onChange={handleGameEditChange}
                   min="0"
                   max="100000"
-                  className="w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-light transition-all"
+                  className={INPUT}
                 />
               </div>
 
-              {/* Jeu favori */}
-              <label className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg border border-primary/10 cursor-pointer hover:border-primary/30 transition-all">
+              <label className="flex items-center justify-between p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10 cursor-pointer hover:border-sky-300 dark:hover:border-neon-cyan/30 transition-all">
                 <div>
-                  <p className="text-white font-medium">Jeu favori</p>
-                  <p className="text-sm text-gray-400">Mis en avant sur ton profil</p>
+                  <p className="text-sm font-semibold text-slate-800 dark:text-white">Jeu favori</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Mis en avant sur ton profil</p>
                 </div>
                 <input
                   type="checkbox"
                   name="is_favorite"
                   checked={gameEditForm.is_favorite}
                   onChange={handleGameEditChange}
-                  className="w-5 h-5 accent-red-600"
+                  className="w-5 h-5 accent-sky-500"
                 />
               </label>
             </div>
 
-            {/* Boutons */}
             <div className="flex gap-3 mt-6">
               <button
                 onClick={handleSaveGame}
                 disabled={savingGame}
-                className="flex-1 px-4 py-2 bg-gradient-to-br from-green-600 to-green-500 text-white rounded-lg font-medium hover:shadow-lg hover:shadow-green-500/30 transition-all disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 bg-gradient-to-br from-emerald-500 to-green-400 text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-emerald-400/30 transition-all disabled:opacity-50"
               >
                 {savingGame ? 'Sauvegarde...' : 'Sauvegarder'}
               </button>
               <button
                 onClick={() => setEditingGame(null)}
-                className="flex-1 px-4 py-2 bg-gray-700/50 hover:bg-gray-600/50 border border-primary/20 text-white rounded-lg font-medium transition-all"
+                className="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 rounded-xl font-semibold text-sm transition-all"
               >
                 Annuler
               </button>
@@ -331,56 +290,54 @@ export default function Profile() {
         </div>
       )}
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Profile Header with Banner */}
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
+        {/* Profile Header */}
         <div className="relative mb-8">
           {/* Banner */}
-          <div className="relative h-48 md:h-64 rounded-t-xl overflow-hidden">
+          <div className="relative h-44 md:h-56 rounded-2xl overflow-hidden">
             {profile.banner_url ? (
-              <img
-                src={profile.banner_url}
-                alt="Banner"
-                className="w-full h-full object-cover"
-              />
+              <img src={profile.banner_url} alt="Banner" className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full bg-gradient-to-r from-primary-darkest via-primary-dark to-primary-darkest" />
+              <div className="w-full h-full bg-gradient-to-r from-sky-400 via-violet-500 to-neon-cyan dark:from-gaming-surface dark:via-neon-violet/40 dark:to-gaming-surfaceLight" />
             )}
-            {/* Banner overlay gradient */}
-            <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-white/60 dark:from-gaming-dark/80 to-transparent" />
           </div>
 
           {/* Profile Card overlapping banner */}
-          <div className="relative -mt-20 mx-4">
-            <div className="bg-gradient-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-sm rounded-xl p-6 border border-primary/20 shadow-lg">
-              <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+          <div className="relative -mt-16 mx-2">
+            <div className={`${CARD} p-5 md:p-6`}>
+              <div className="flex flex-col md:flex-row items-start md:items-end gap-5">
                 {/* Avatar */}
-                <div className="relative -mt-16 md:-mt-20">
+                <div className="relative -mt-14 shrink-0">
                   <Avatar
                     src={profile.avatar_url}
                     username={profile.username}
-                    size={120}
-                    className="ring-4 ring-gray-900 shadow-xl"
+                    size={112}
+                    className="ring-4 ring-white dark:ring-gaming-dark shadow-xl"
                   />
-                  {/* Online indicator */}
-                  <div className="absolute bottom-2 right-2 w-5 h-5 bg-green-500 rounded-full border-4 border-gray-900" />
+                  <div className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white dark:border-gaming-dark" />
                 </div>
 
                 {/* User info */}
-                <div className="flex-1">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
                     <div>
-                      <h1 className="text-3xl font-bold bg-gradient-to-r from-primary-light via-primary to-primary-dark bg-clip-text text-transparent">
+                      <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-sky-500 to-neon-violet dark:from-neon-cyan dark:to-neon-violet bg-clip-text text-transparent">
                         {profile.username}
                       </h1>
                       {profile.region && (
-                        <p className="text-gray-400 mt-1 flex items-center gap-1">
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1">
                           <span>📍</span> {profile.region}
                         </p>
                       )}
                     </div>
                     <button
                       onClick={() => setIsEditing(!isEditing)}
-                      className="px-4 py-2 bg-gradient-primary hover:shadow-glow-red-lg rounded-lg transition-all shadow-glow-red flex items-center gap-2"
+                      className={`shrink-0 px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all ${
+                        isEditing
+                          ? 'bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-white/20'
+                          : 'bg-gradient-neon text-white shadow-glow-cyan hover:shadow-glow-cyan-lg hover:scale-[1.02]'
+                      }`}
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -389,22 +346,20 @@ export default function Profile() {
                     </button>
                   </div>
 
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-2 mt-4">
-                    <span className={`px-3 py-1 ${skillInfo.bg} ${skillInfo.color} rounded-full text-sm border ${skillInfo.border}`}>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${skillInfo.bg} ${skillInfo.color} ${skillInfo.border}`}>
                       {skillInfo.label}
                     </span>
-                    <span className="px-3 py-1 bg-green-600/20 text-green-400 rounded-full text-sm border border-green-500/20">
+                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
                       🎯 {LOOKING_FOR_LABELS[profile.looking_for] || 'Coéquipiers'}
                     </span>
-                    <span className="px-3 py-1 bg-gray-700/50 text-gray-300 rounded-full text-sm border border-gray-600/20">
+                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-slate-100 dark:bg-white/8 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10">
                       🎮 {games.length} jeux
                     </span>
                   </div>
 
-                  {/* Bio */}
                   {profile.bio && (
-                    <p className="text-gray-300 mt-4 max-w-2xl">{profile.bio}</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-300 mt-3 max-w-2xl leading-relaxed">{profile.bio}</p>
                   )}
                 </div>
               </div>
@@ -413,56 +368,40 @@ export default function Profile() {
         </div>
 
         {isEditing ? (
-          /* Edit Form */
-          <form onSubmit={handleSaveProfile} className="space-y-6">
-            {/* Image Selection Section */}
-            <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-primary/20 shadow-lg">
-              <h2 className="text-xl font-bold mb-6 bg-gradient-to-r from-primary-light to-primary bg-clip-text text-transparent">
-                Images de profil
-              </h2>
+          <form onSubmit={handleSaveProfile} className="space-y-5">
+            {/* Images Section */}
+            <div className={`${CARD} p-6`}>
+              <h2 className="text-base font-bold text-slate-800 dark:text-white mb-5">Images de profil</h2>
               <div className="grid md:grid-cols-2 gap-6">
-                {/* Avatar Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-3">Avatar</label>
+                  <label className={LABEL}>Avatar</label>
                   <div className="flex items-center gap-4">
-                    <Avatar
-                      src={editForm.avatar_url}
-                      username={profile.username}
-                      size={80}
-                      className="ring-2 ring-primary/50"
-                    />
+                    <Avatar src={editForm.avatar_url} username={profile.username} size={72} className="ring-2 ring-sky-300 dark:ring-neon-cyan/40 shrink-0" />
                     <button
                       type="button"
                       onClick={() => openImageSelector('avatar')}
-                      className="px-4 py-2 bg-gray-700/50 hover:bg-gray-600/50 border border-primary/20 rounded-lg transition-all flex items-center gap-2"
+                      className="px-3 py-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-sky-300 dark:hover:border-neon-cyan/30 rounded-xl text-sm text-slate-600 dark:text-slate-300 flex items-center gap-2 transition-all"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
-                      Changer l'avatar
+                      Changer
                     </button>
                   </div>
                 </div>
-
-                {/* Banner Selection */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-3">Bannière</label>
-                  <div className="space-y-3">
-                    <div className="relative h-24 rounded-lg overflow-hidden border border-primary/20">
-                      {editForm.banner_url ? (
-                        <img
-                          src={editForm.banner_url}
-                          alt="Banner preview"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-r from-primary-darkest via-primary-dark to-primary-darkest" />
-                      )}
+                  <label className={LABEL}>Bannière</label>
+                  <div className="space-y-2">
+                    <div className="relative h-20 rounded-xl overflow-hidden border border-slate-200 dark:border-white/10">
+                      {editForm.banner_url
+                        ? <img src={editForm.banner_url} alt="Banner preview" className="w-full h-full object-cover" />
+                        : <div className="w-full h-full bg-gradient-to-r from-sky-400 via-violet-500 to-neon-cyan dark:from-gaming-surface dark:via-neon-violet/40 dark:to-gaming-surfaceLight" />
+                      }
                     </div>
                     <button
                       type="button"
                       onClick={() => openImageSelector('banner')}
-                      className="px-4 py-2 bg-gray-700/50 hover:bg-gray-600/50 border border-primary/20 rounded-lg transition-all flex items-center gap-2"
+                      className="px-3 py-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-sky-300 dark:hover:border-neon-cyan/30 rounded-xl text-sm text-slate-600 dark:text-slate-300 flex items-center gap-2 transition-all"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -475,306 +414,208 @@ export default function Profile() {
             </div>
 
             {/* Profile Info Section */}
-            <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-primary/20 shadow-lg">
-              <h2 className="text-xl font-bold mb-6 bg-gradient-to-r from-primary-light to-primary bg-clip-text text-transparent">
-                Informations
-              </h2>
-
-              <div className="grid md:grid-cols-2 gap-6">
+            <div className={`${CARD} p-6`}>
+              <h2 className="text-base font-bold text-slate-800 dark:text-white mb-5">Informations</h2>
+              <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Région</label>
-                  <input
-                    type="text"
-                    name="region"
-                    value={editForm.region || ''}
-                    onChange={handleEditChange}
-                    placeholder="ex: Europe, NA, Asie"
-                    className="w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-light transition-all"
-                  />
+                  <label className={LABEL}>Région</label>
+                  <input type="text" name="region" value={editForm.region || ''} onChange={handleEditChange} placeholder="Europe, NA, Asie…" className={INPUT} />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Date de naissance</label>
+                  <label className={LABEL}>Date de naissance</label>
                   <input
                     type="date"
                     name="date_of_birth"
                     value={editForm.date_of_birth || ''}
                     onChange={handleEditChange}
                     max={new Date(new Date().setFullYear(new Date().getFullYear() - 13)).toISOString().split('T')[0]}
-                    className="w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-light transition-all"
+                    className={INPUT}
                   />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Fuseau horaire</label>
-                  <input
-                    type="text"
-                    name="timezone"
-                    value={editForm.timezone || ''}
-                    onChange={handleEditChange}
-                    placeholder="ex: Europe/Paris"
-                    className="w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-light transition-all"
-                  />
+                  <label className={LABEL}>Fuseau horaire</label>
+                  <input type="text" name="timezone" value={editForm.timezone || ''} onChange={handleEditChange} placeholder="Europe/Paris" className={INPUT} />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Niveau global</label>
-                  <select
-                    name="skill_level"
-                    value={editForm.skill_level || 'beginner'}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-light transition-all"
-                  >
+                  <label className={LABEL}>Niveau global</label>
+                  <select name="skill_level" value={editForm.skill_level || 'beginner'} onChange={handleEditChange} className={INPUT}>
                     {skillLevels.map(level => (
                       <option key={level} value={level}>{SKILL_LEVELS[level].label}</option>
                     ))}
                   </select>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Je recherche</label>
-                  <select
-                    name="looking_for"
-                    value={editForm.looking_for || 'teammates'}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-light transition-all"
-                  >
+                  <label className={LABEL}>Je recherche</label>
+                  <select name="looking_for" value={editForm.looking_for || 'teammates'} onChange={handleEditChange} className={INPUT}>
                     {lookingForOptions.map(option => (
                       <option key={option} value={option}>{LOOKING_FOR_LABELS[option]}</option>
                     ))}
                   </select>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Visibilité du profil</label>
-                  <select
-                    name="profile_visibility"
-                    value={editForm.profile_visibility || 'public'}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-light transition-all"
-                  >
+                  <label className={LABEL}>Visibilité du profil</label>
+                  <select name="profile_visibility" value={editForm.profile_visibility || 'public'} onChange={handleEditChange} className={INPUT}>
                     <option value="public">Public</option>
                     <option value="friends">Amis uniquement</option>
                     <option value="private">Privé</option>
                   </select>
                 </div>
               </div>
-
-              <div className="mt-6">
-                <label className="block text-sm font-medium text-gray-300 mb-2">Bio</label>
+              <div className="mt-4">
+                <label className={LABEL}>Bio</label>
                 <textarea
                   name="bio"
                   rows={3}
                   value={editForm.bio || ''}
                   onChange={handleEditChange}
                   maxLength={1000}
-                  className="w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-light transition-all resize-none"
+                  className={INPUT + ' resize-none'}
                   placeholder="Parle-nous de toi..."
                 />
-                <p className="text-xs text-gray-500 mt-1">{(editForm.bio || '').length}/1000 caractères</p>
+                <p className="text-xs text-slate-400 mt-1">{(editForm.bio || '').length}/1000 caractères</p>
               </div>
             </div>
 
-            {/* Gaming Accounts Section */}
-            <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-primary/20 shadow-lg">
-              <h2 className="text-xl font-bold mb-6 bg-gradient-to-r from-primary-light to-primary bg-clip-text text-transparent">
-                Comptes Gaming
-              </h2>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    <span className="flex items-center gap-2">💬 Discord</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="discord_username"
-                    value={editForm.discord_username || ''}
-                    onChange={handleEditChange}
-                    placeholder="username"
-                    className="w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-light transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    <span className="flex items-center gap-2">🎮 Steam ID</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="steam_id"
-                    value={editForm.steam_id || ''}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-light transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    <span className="flex items-center gap-2">📺 Twitch</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="twitch_username"
-                    value={editForm.twitch_username || ''}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-light transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    <span className="flex items-center gap-2">🎯 Riot ID</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="riot_id"
-                    value={editForm.riot_id || ''}
-                    onChange={handleEditChange}
-                    placeholder="Name#TAG"
-                    className="w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-light transition-all"
-                  />
-                </div>
+            {/* Gaming Accounts */}
+            <div className={`${CARD} p-6`}>
+              <h2 className="text-base font-bold text-slate-800 dark:text-white mb-5">Comptes Gaming</h2>
+              <div className="grid md:grid-cols-2 gap-4">
+                {[
+                  { name: 'discord_username', label: 'Discord', placeholder: 'username', icon: '💬' },
+                  { name: 'steam_id', label: 'Steam ID', placeholder: '', icon: '🎮' },
+                  { name: 'twitch_username', label: 'Twitch', placeholder: '', icon: '📺' },
+                  { name: 'riot_id', label: 'Riot ID', placeholder: 'Name#TAG', icon: '🎯' },
+                ].map(field => (
+                  <div key={field.name}>
+                    <label className={LABEL}>{field.icon} {field.label}</label>
+                    <input
+                      type="text"
+                      name={field.name}
+                      value={editForm[field.name] || ''}
+                      onChange={handleEditChange}
+                      placeholder={field.placeholder}
+                      className={INPUT}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
 
             {/* Privacy Settings */}
-            <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-primary/20 shadow-lg">
-              <h2 className="text-xl font-bold mb-6 bg-gradient-to-r from-primary-light to-primary bg-clip-text text-transparent">
-                Confidentialité
-              </h2>
-
-              <div className="space-y-4">
-                <label className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg border border-primary/10 cursor-pointer hover:border-primary/30 transition-all">
-                  <div>
-                    <p className="text-white font-medium">Afficher les statistiques</p>
-                    <p className="text-sm text-gray-400">Les autres joueurs peuvent voir tes stats</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    name="show_stats"
-                    checked={editForm.show_stats !== false}
-                    onChange={handleEditChange}
-                    className="w-5 h-5 accent-primary"
-                  />
-                </label>
-
-                <label className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg border border-primary/10 cursor-pointer hover:border-primary/30 transition-all">
-                  <div>
-                    <p className="text-white font-medium">Accepter les demandes</p>
-                    <p className="text-sm text-gray-400">Recevoir des demandes de match</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    name="allow_friend_requests"
-                    checked={editForm.allow_friend_requests !== false}
-                    onChange={handleEditChange}
-                    className="w-5 h-5 accent-primary"
-                  />
-                </label>
+            <div className={`${CARD} p-6`}>
+              <h2 className="text-base font-bold text-slate-800 dark:text-white mb-5">Confidentialité</h2>
+              <div className="space-y-3">
+                {[
+                  { name: 'show_stats', label: 'Afficher les statistiques', sub: 'Les autres joueurs peuvent voir tes stats', defaultVal: true },
+                  { name: 'allow_friend_requests', label: 'Accepter les demandes', sub: 'Recevoir des demandes de match', defaultVal: true },
+                ].map(item => (
+                  <label key={item.name} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10 hover:border-sky-300 dark:hover:border-neon-cyan/30 cursor-pointer transition-all">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800 dark:text-white">{item.label}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{item.sub}</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      name={item.name}
+                      checked={editForm[item.name] !== false}
+                      onChange={handleEditChange}
+                      className="w-5 h-5 accent-sky-500"
+                    />
+                  </label>
+                ))}
               </div>
             </div>
 
             {/* Save Buttons */}
-            <div className="flex gap-4">
+            <div className="flex gap-3">
               <button
                 type="submit"
                 disabled={saving}
-                className="px-6 py-3 bg-gradient-to-br from-green-600 to-green-500 hover:shadow-lg hover:shadow-green-500/50 rounded-lg transition-all disabled:opacity-50 flex items-center gap-2"
+                className="px-6 py-2.5 bg-gradient-to-br from-emerald-500 to-green-400 text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-emerald-400/30 transition-all disabled:opacity-50 flex items-center gap-2"
               >
-                {saving && (
-                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                )}
+                {saving && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                 {saving ? 'Sauvegarde...' : 'Sauvegarder'}
               </button>
               <button
                 type="button"
                 onClick={() => setIsEditing(false)}
-                className="px-6 py-3 bg-gray-700/50 hover:bg-gray-600/50 border border-primary/20 rounded-lg transition-all"
+                className="px-6 py-2.5 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 text-slate-600 dark:text-slate-300 rounded-xl font-semibold text-sm transition-all"
               >
                 Annuler
               </button>
             </div>
           </form>
         ) : (
-          <div className="space-y-8">
-            {/* Profile Details */}
-            <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-5">
+            <div className="grid md:grid-cols-2 gap-5">
               {/* Info Card */}
-              <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-primary/20 shadow-lg">
-                <h2 className="text-xl font-bold mb-4 bg-gradient-to-r from-primary-light to-primary bg-clip-text text-transparent">
-                  Informations
-                </h2>
+              <div className={`${CARD} p-5`}>
+                <h2 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-4">Informations</h2>
                 <div className="space-y-3">
                   {profile.region && (
                     <div className="flex items-center gap-3">
-                      <span className="text-gray-400">📍</span>
-                      <span className="text-white">{profile.region}</span>
+                      <span className="text-base">📍</span>
+                      <span className="text-sm text-slate-700 dark:text-slate-200">{profile.region}</span>
                     </div>
                   )}
                   {profile.timezone && (
                     <div className="flex items-center gap-3">
-                      <span className="text-gray-400">🕐</span>
-                      <span className="text-white">{profile.timezone}</span>
+                      <span className="text-base">🕐</span>
+                      <span className="text-sm text-slate-700 dark:text-slate-200">{profile.timezone}</span>
                     </div>
                   )}
                   {!profile.region && !profile.timezone && (
-                    <p className="text-gray-500 text-sm">Aucune information ajoutée</p>
+                    <p className="text-sm text-slate-400 dark:text-slate-500">Aucune information ajoutée</p>
                   )}
                 </div>
               </div>
 
               {/* Gaming Accounts Card */}
-              <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-primary/20 shadow-lg">
-                <h2 className="text-xl font-bold mb-4 bg-gradient-to-r from-primary-light to-primary bg-clip-text text-transparent">
-                  Comptes Gaming
-                </h2>
-                <div className="space-y-3">
+              <div className={`${CARD} p-5`}>
+                <h2 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-4">Comptes Gaming</h2>
+                <div className="space-y-2.5">
                   {profile.discord_username && (
                     <div className="flex items-center gap-3">
-                      <span className="text-[#5865F2]">Discord</span>
-                      <span className="text-white">{profile.discord_username}</span>
+                      <span className="text-xs font-semibold text-[#5865F2] w-14">Discord</span>
+                      <span className="text-sm text-slate-700 dark:text-slate-200">{profile.discord_username}</span>
                     </div>
                   )}
                   {profile.steam_id && (
                     <div className="flex items-center gap-3">
-                      <span className="text-gray-400">Steam</span>
-                      <span className="text-white">{profile.steam_id}</span>
+                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 w-14">Steam</span>
+                      <span className="text-sm text-slate-700 dark:text-slate-200">{profile.steam_id}</span>
                     </div>
                   )}
                   {profile.twitch_username && (
                     <div className="flex items-center gap-3">
-                      <span className="text-[#9146FF]">Twitch</span>
-                      <span className="text-white">{profile.twitch_username}</span>
+                      <span className="text-xs font-semibold text-[#9146FF] w-14">Twitch</span>
+                      <span className="text-sm text-slate-700 dark:text-slate-200">{profile.twitch_username}</span>
                     </div>
                   )}
                   {profile.riot_id && (
                     <div className="flex items-center gap-3">
-                      <span className="text-[#D32936]">Riot ID</span>
-                      <span className="text-white">{profile.riot_id}</span>
+                      <span className="text-xs font-semibold text-[#D32936] w-14">Riot ID</span>
+                      <span className="text-sm text-slate-700 dark:text-slate-200">{profile.riot_id}</span>
                     </div>
                   )}
                   {!profile.discord_username && !profile.steam_id && !profile.twitch_username && !profile.riot_id && (
-                    <p className="text-gray-500 text-sm">Aucun compte lié</p>
+                    <p className="text-sm text-slate-400 dark:text-slate-500">Aucun compte lié</p>
                   )}
                 </div>
               </div>
             </div>
 
             {/* Games */}
-            <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-primary/20 shadow-lg">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold bg-gradient-to-r from-primary-light to-primary bg-clip-text text-transparent">
-                  Mes Jeux ({games.length})
+            <div className={`${CARD} p-5`}>
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                  Mes Jeux <span className="text-sky-500 dark:text-neon-cyan">({games.length})</span>
                 </h2>
                 <select
                   onChange={(e) => { if (e.target.value) { addGameToProfile(parseInt(e.target.value)); e.target.value = ''; }}}
-                  className="px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-light"
+                  className="px-3 py-1.5 bg-gradient-neon text-white text-xs font-semibold rounded-lg shadow-glow-cyan cursor-pointer border-0 focus:outline-none"
                 >
-                  <option value="">+ Ajouter un jeu</option>
+                  <option value="">+ Ajouter</option>
                   {allGames.filter(game => !games.find(g => g.id === game.id)).map(game => (
                     <option key={game.id} value={game.id}>{game.name}</option>
                   ))}
@@ -782,42 +623,44 @@ export default function Profile() {
               </div>
 
               {games.length > 0 ? (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {games.map(game => {
                     const gameSkill = SKILL_LEVELS[game.skill_level] || SKILL_LEVELS.beginner;
                     return (
-                      <div key={game.id} className="p-4 bg-gradient-to-br from-gray-800/50 to-gray-700/50 rounded-lg border border-primary/10 hover:border-primary-light/30 transition-all">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold text-white">{game.name}</h3>
-                          <div className="flex items-center gap-2">
-                            {game.is_favorite && <span className="text-yellow-400">⭐</span>}
+                      <div key={game.id} className="p-4 bg-slate-50 dark:bg-white/[0.03] rounded-xl border border-slate-200 dark:border-white/8 hover:border-sky-300 dark:hover:border-neon-cyan/30 hover:shadow-sm dark:hover:shadow-glow-cyan/10 transition-all group">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="min-w-0">
+                            <h3 className="font-semibold text-sm text-slate-800 dark:text-white truncate">{game.name}</h3>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">{game.category}</p>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                            {game.is_favorite && <span className="text-amber-400 text-sm">⭐</span>}
                             <button
                               onClick={() => openGameEditor(game)}
-                              className="text-gray-400 hover:text-primary-light transition-colors"
+                              className="text-slate-400 hover:text-sky-500 dark:hover:text-neon-cyan transition-colors opacity-0 group-hover:opacity-100"
                               title="Modifier ce jeu"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                               </svg>
                             </button>
                           </div>
                         </div>
-                        <p className="text-sm text-gray-400">{game.category}</p>
-                        <div className="mt-2 space-y-1">
-                          <p className="text-sm">
-                            <span className="text-gray-400">Niveau: </span>
-                            <span className={gameSkill.color}>{gameSkill.label}</span>
-                          </p>
-                          {game.rank && <p className="text-sm"><span className="text-gray-400">Rang:</span> <span className="text-white">{game.rank}</span></p>}
-                          {game.hours_played > 0 && <p className="text-sm"><span className="text-gray-400">Heures:</span> <span className="text-white">{game.hours_played.toLocaleString()}h</span></p>}
+                        <div className="space-y-1">
+                          <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded-full border ${gameSkill.bg} ${gameSkill.color} ${gameSkill.border}`}>
+                            {gameSkill.label}
+                          </span>
+                          {game.rank && <p className="text-xs text-slate-500 dark:text-slate-400">Rang: <span className="text-slate-700 dark:text-slate-200">{game.rank}</span></p>}
+                          {game.hours_played > 0 && <p className="text-xs text-slate-500 dark:text-slate-400">Heures: <span className="text-slate-700 dark:text-slate-200">{game.hours_played.toLocaleString()}h</span></p>}
                         </div>
                       </div>
                     );
                   })}
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-400">
-                  <p>Aucun jeu ajouté. Ajoute des jeux pour que les autres te trouvent !</p>
+                <div className="text-center py-10">
+                  <div className="text-3xl mb-3">🎮</div>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Aucun jeu ajouté. Ajoute des jeux pour que les autres te trouvent !</p>
                 </div>
               )}
             </div>

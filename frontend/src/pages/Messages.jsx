@@ -1,9 +1,3 @@
-/**
- * Messages Page Component
- * Handles conversations and messaging between users
- * Responsive design with mobile-first approach
- */
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -37,10 +31,7 @@ export default function Messages() {
   useEffect(() => {
     if (selectedConversation) {
       loadMessages(selectedConversation.user_id);
-      // On mobile, hide sidebar when conversation is selected
-      if (window.innerWidth < 768) {
-        setShowSidebar(false);
-      }
+      if (window.innerWidth < 768) setShowSidebar(false);
     }
   }, [selectedConversation]);
 
@@ -48,21 +39,17 @@ export default function Messages() {
 
   const loadConversations = async () => {
     try {
-      const response = await messagesAPI.getConversations();
-      setConversations(response.data.conversations);
+      const r = await messagesAPI.getConversations();
+      setConversations(r.data.conversations);
     } catch (err) {
       showError('Impossible de charger les conversations');
-      console.error('Failed to load conversations:', err);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   const initiateConversation = (userId, username) => {
     const existing = conversations.find(c => c.user_id === userId);
-    if (existing) {
-      setSelectedConversation(existing);
-    } else {
+    if (existing) setSelectedConversation(existing);
+    else {
       setSelectedConversation({ user_id: userId, username, avatar_url: null, last_message: null, last_message_time: null, unread_count: 0 });
       setMessages([]);
     }
@@ -71,17 +58,12 @@ export default function Messages() {
   const loadMessages = async (userId) => {
     setLoadingMessages(true);
     try {
-      const response = await messagesAPI.getMessages(userId);
-      setMessages(response.data.messages);
+      const r = await messagesAPI.getMessages(userId);
+      setMessages(r.data.messages);
     } catch (err) {
-      if (err.response?.status === 403) {
-        showError('Tu peux seulement envoyer des messages aux joueurs avec qui tu as un match accepté');
-      } else {
-        setMessages([]);
-      }
-    } finally {
-      setLoadingMessages(false);
-    }
+      if (err.response?.status === 403) showError('Tu peux seulement écrire aux joueurs avec qui tu as un match accepté');
+      else setMessages([]);
+    } finally { setLoadingMessages(false); }
   };
 
   const sendMessage = async (e) => {
@@ -89,24 +71,15 @@ export default function Messages() {
     if (!newMessage.trim() || !selectedConversation || sending) return;
     setSending(true);
 
-    // Optimistic update
     const tempId = Date.now();
-    const optimisticMessage = {
-      id: tempId,
-      content: newMessage.trim(),
-      sender_id: user.id,
-      created_at: new Date().toISOString(),
-      pending: true,
-    };
+    const optimisticMessage = { id: tempId, content: newMessage.trim(), sender_id: user.id, created_at: new Date().toISOString(), pending: true };
     setMessages(prev => [...prev, optimisticMessage]);
     const messageText = newMessage.trim();
     setNewMessage('');
 
     try {
-      const response = await messagesAPI.sendMessage(selectedConversation.user_id, messageText);
-      // Replace optimistic message with real one
-      setMessages(prev => prev.map(m => m.id === tempId ? response.data.message : m));
-
+      const r = await messagesAPI.sendMessage(selectedConversation.user_id, messageText);
+      setMessages(prev => prev.map(m => m.id === tempId ? r.data.message : m));
       setConversations(prev => {
         const idx = prev.findIndex(c => c.user_id === selectedConversation.user_id);
         const updated = { ...selectedConversation, last_message: messageText, last_message_time: new Date().toISOString() };
@@ -115,12 +88,9 @@ export default function Messages() {
       });
       setSelectedConversation(prev => ({ ...prev, last_message: messageText, last_message_time: new Date().toISOString() }));
     } catch (err) {
-      // Remove optimistic message on error
       setMessages(prev => prev.filter(m => m.id !== tempId));
       showError('Impossible d\'envoyer: ' + (err.response?.data?.detail || err.message));
-    } finally {
-      setSending(false);
-    }
+    } finally { setSending(false); }
   };
 
   const formatTime = (ts) => {
@@ -134,27 +104,21 @@ export default function Messages() {
     try {
       await messagesAPI.deleteMessage(messageId);
       setMessages(prev => prev.filter(m => m.id !== messageId));
-      // Refresh conversations to update last_message
       loadConversations();
-    } catch (err) {
-      showError('Impossible de supprimer le message');
-    }
+    } catch (err) { showError('Impossible de supprimer le message'); }
   };
 
-  const handleBackToList = () => {
-    setShowSidebar(true);
-    setSelectedConversation(null);
-  };
+  const handleBackToList = () => { setShowSidebar(true); setSelectedConversation(null); };
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-primary-darkest to-gray-950 text-white flex items-center justify-center p-4">
+      <div className="min-h-screen bg-slate-50 dark:bg-gaming-dark flex items-center justify-center p-4">
         <div className="text-center animate-fade-in">
-          <div className="w-20 h-20 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4 shadow-glow-red animate-float">
-            <span className="text-4xl">🔒</span>
+          <div className="w-16 h-16 bg-gradient-neon rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-glow-cyan animate-float">
+            <span className="text-2xl">🔒</span>
           </div>
-          <h2 className="text-2xl font-bold mb-4">Connecte-toi pour accéder aux messages</h2>
-          <a href="/login" className="inline-block px-6 py-3 bg-gradient-primary rounded-lg shadow-glow-red hover:shadow-glow-red-lg transition-all transform hover:scale-105">
+          <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-4">Connecte-toi pour accéder aux messages</h2>
+          <a href="/login" className="inline-block px-6 py-3 bg-gradient-neon rounded-xl font-semibold text-white shadow-glow-cyan hover:shadow-glow-cyan-lg transition-all hover:scale-105">
             Se connecter
           </a>
         </div>
@@ -164,18 +128,13 @@ export default function Messages() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-primary-darkest to-gray-950 text-white">
-        <div className="flex h-screen">
-          {/* Skeleton Sidebar */}
-          <div className="w-full md:w-1/3 lg:w-1/4 bg-gradient-to-b from-gray-900/80 to-gray-800/80 border-r border-primary/20">
-            <div className="p-4 border-b border-primary/20">
-              <div className="h-6 w-24 bg-gray-700 rounded animate-pulse" />
+      <div className="min-h-screen bg-slate-50 dark:bg-gaming-dark">
+        <div className="flex h-[calc(100vh-6rem)]">
+          <div className="w-full md:w-1/3 lg:w-1/4 bg-white dark:bg-white/5 border-r border-slate-200 dark:border-white/8">
+            <div className="p-4 border-b border-slate-200 dark:border-white/8">
+              <div className="h-5 w-24 bg-slate-200 dark:bg-white/10 rounded-lg animate-pulse" />
             </div>
-            <div className="space-y-0">
-              {[1, 2, 3, 4, 5].map(i => (
-                <SkeletonConversation key={i} />
-              ))}
-            </div>
+            {[1, 2, 3, 4, 5].map(i => <SkeletonConversation key={i} />)}
           </div>
         </div>
       </div>
@@ -183,22 +142,21 @@ export default function Messages() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-primary-darkest to-gray-950 text-white">
-      <div className="flex h-screen overflow-hidden">
-        {/* Conversations List - Sidebar */}
+    <div className="min-h-screen bg-slate-50 dark:bg-gaming-dark text-slate-900 dark:text-white">
+      <div className="flex h-[calc(100vh-6rem)] overflow-hidden">
+
+        {/* Sidebar */}
         <div className={`
           ${showSidebar ? 'flex' : 'hidden md:flex'}
-          flex-col w-full md:w-1/3 lg:w-1/4
-          bg-gradient-to-b from-gray-900/80 to-gray-800/80 backdrop-blur-sm
-          border-r border-primary/20
+          flex-col w-full md:w-1/3 lg:w-72
+          bg-white dark:bg-white/[0.03] backdrop-blur-sm
+          border-r border-slate-200 dark:border-white/8
           transition-all duration-300
         `}>
-          <div className="p-4 border-b border-primary/20 flex items-center justify-between">
-            <h1 className="text-xl font-bold bg-gradient-to-r from-primary-light to-primary bg-clip-text text-transparent">
-              Messages
-            </h1>
-            <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded-full">
-              {conversations.length} conv.
+          <div className="p-4 border-b border-slate-200 dark:border-white/8 flex items-center justify-between">
+            <h1 className="text-base font-bold text-slate-800 dark:text-slate-100">Messages</h1>
+            <span className="text-xs text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-white/5 px-2 py-0.5 rounded-full border border-slate-200 dark:border-white/8">
+              {conversations.length}
             </span>
           </div>
 
@@ -207,42 +165,39 @@ export default function Messages() {
               <div
                 key={conv.user_id}
                 onClick={() => setSelectedConversation(conv)}
-                className={`
-                  p-4 border-b border-primary/10 cursor-pointer
-                  hover:bg-gray-800/50 transition-all duration-200
-                  animate-fade-in
-                  ${selectedConversation?.user_id === conv.user_id ? 'bg-primary/20 border-l-2 border-l-primary-light' : ''}
-                `}
-                style={{ animationDelay: `${index * 50}ms` }}
+                className={`p-4 border-b border-slate-100 dark:border-white/5 cursor-pointer transition-all duration-200 animate-fade-in ${
+                  selectedConversation?.user_id === conv.user_id
+                    ? 'bg-sky-50 dark:bg-neon-cyan/10 border-l-2 border-l-sky-500 dark:border-l-neon-cyan'
+                    : 'hover:bg-slate-50 dark:hover:bg-white/5'
+                }`}
+                style={{ animationDelay: `${index * 40}ms` }}
               >
                 <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <Avatar src={conv.avatar_url} username={conv.username} size={48} className="ring-2 ring-primary-light/30" />
+                  <div className="relative flex-shrink-0">
+                    <Avatar src={conv.avatar_url} username={conv.username} size={44} className="ring-2 ring-slate-200 dark:ring-white/10" />
                     {conv.unread_count > 0 && (
-                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-primary text-xs flex items-center justify-center rounded-full shadow-glow-red animate-bounce-in">
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-neon text-white text-xs flex items-center justify-center rounded-full shadow-glow-cyan animate-bounce-in font-bold">
                         {conv.unread_count}
                       </span>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold truncate text-white">{conv.username}</h3>
-                    </div>
-                    <p className="text-sm text-gray-400 truncate">{conv.last_message || 'Commencer une conversation'}</p>
+                    <h3 className="font-semibold text-sm text-slate-800 dark:text-slate-100 truncate">{conv.username}</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{conv.last_message || 'Commencer une conversation'}</p>
                     {conv.last_message_time && (
-                      <p className="text-xs text-gray-500 mt-1">{formatTime(conv.last_message_time)}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{formatTime(conv.last_message_time)}</p>
                     )}
                   </div>
                 </div>
               </div>
             )) : (
-              <div className="p-8 text-center text-gray-400 animate-fade-in">
-                <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4 shadow-glow-red animate-float">
+              <div className="p-8 text-center animate-fade-in">
+                <div className="w-14 h-14 bg-gradient-neon rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-glow-cyan animate-float">
                   <span className="text-2xl">💬</span>
                 </div>
-                <p className="mb-2 font-medium">Pas encore de conversations</p>
-                <p className="text-sm text-gray-500">Accepte des matchs pour commencer à échanger</p>
-                <a href="/matching" className="inline-block mt-4 px-4 py-2 bg-gradient-primary rounded-lg text-sm shadow-glow-red hover:shadow-glow-red-lg transition-all">
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Pas encore de conversations</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Accepte des matchs pour commencer</p>
+                <a href="/matching" className="inline-block px-4 py-2 bg-gradient-neon rounded-xl text-xs font-semibold text-white shadow-glow-cyan hover:shadow-glow-cyan-lg transition-all">
                   Trouver des coéquipiers
                 </a>
               </div>
@@ -251,40 +206,35 @@ export default function Messages() {
         </div>
 
         {/* Messages Area */}
-        <div className={`
-          ${!showSidebar || selectedConversation ? 'flex' : 'hidden md:flex'}
-          flex-1 flex-col
-          transition-all duration-300
-        `}>
+        <div className={`${!showSidebar || selectedConversation ? 'flex' : 'hidden md:flex'} flex-1 flex-col transition-all duration-300`}>
           {selectedConversation ? (
             <>
-              {/* Header */}
-              <div className="p-4 bg-gradient-to-r from-gray-900/80 to-gray-800/80 backdrop-blur-sm border-b border-primary/20">
+              {/* Conversation header */}
+              <div className="p-4 bg-white dark:bg-white/[0.03] backdrop-blur-sm border-b border-slate-200 dark:border-white/8">
                 <div className="flex items-center gap-3">
-                  {/* Back button for mobile */}
                   <button
                     onClick={handleBackToList}
-                    className="md:hidden p-2 -ml-2 text-gray-400 hover:text-white transition-colors"
+                    className="md:hidden p-1.5 -ml-1 text-slate-400 hover:text-sky-600 dark:hover:text-neon-cyan transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-white/5"
                     aria-label="Retour à la liste"
                   >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
-                  <Avatar src={selectedConversation.avatar_url} username={selectedConversation.username} size={40} className="ring-2 ring-primary-light/50" />
+                  <Avatar src={selectedConversation.avatar_url} username={selectedConversation.username} size={38} className="ring-2 ring-sky-300/40 dark:ring-neon-cyan/30" />
                   <div className="flex-1 min-w-0">
-                    <h2 className="font-semibold text-white truncate">{selectedConversation.username}</h2>
-                    <p className="text-sm text-gray-400">
+                    <h2 className="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">{selectedConversation.username}</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       {loadingMessages ? 'Chargement...' : messages.length === 0 ? 'Nouvelle conversation' : 'En ligne'}
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {/* Messages list */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {loadingMessages ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <SkeletonMessage isOwn={false} />
                     <SkeletonMessage isOwn={true} />
                     <SkeletonMessage isOwn={false} />
@@ -292,9 +242,9 @@ export default function Messages() {
                   </div>
                 ) : messages.length === 0 ? (
                   <div className="text-center py-12 animate-fade-in">
-                    <Avatar src={selectedConversation.avatar_url} username={selectedConversation.username} size={80} className="mx-auto mb-4 ring-2 ring-primary-light/50" />
-                    <h3 className="text-xl font-semibold mb-2 text-white">Conversation avec {selectedConversation.username}</h3>
-                    <p className="text-gray-400">Envoie ton premier message !</p>
+                    <Avatar src={selectedConversation.avatar_url} username={selectedConversation.username} size={72} className="mx-auto mb-4 ring-2 ring-sky-300/40 dark:ring-neon-cyan/30" />
+                    <h3 className="text-base font-bold text-slate-800 dark:text-white mb-1">Conversation avec {selectedConversation.username}</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Envoie ton premier message !</p>
                   </div>
                 ) : (
                   messages.map((msg, index) => {
@@ -303,38 +253,34 @@ export default function Messages() {
                       <div
                         key={msg.id}
                         className={`flex ${mine ? 'justify-end' : 'justify-start'} animate-fade-in group`}
-                        style={{ animationDelay: `${index * 30}ms` }}
+                        style={{ animationDelay: `${index * 20}ms` }}
                       >
-                        {/* Bouton suppression — affiché au survol, uniquement pour mes messages */}
                         {mine && !msg.pending && (
                           <button
                             onClick={() => handleDeleteMessage(msg.id)}
-                            className="self-center mr-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-full hover:bg-gray-700/60 text-gray-500 hover:text-red-400"
+                            className="self-center mr-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-red-500 dark:hover:text-red-400"
                             title="Supprimer le message"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
                           </button>
                         )}
                         <div className={`max-w-[75%] sm:max-w-xs lg:max-w-md ${mine ? 'order-2' : 'order-1'}`}>
                           {!mine && (
-                            <Avatar src={msg.sender_avatar} username={msg.sender_username} size={32} className="mb-1" />
+                            <Avatar src={msg.sender_avatar} username={msg.sender_username} size={28} className="mb-1" />
                           )}
-                          <div className={`
-                            px-4 py-2 rounded-2xl transition-all
-                            ${mine
-                              ? 'bg-gradient-primary text-white shadow-glow-red rounded-br-sm'
-                              : 'bg-gradient-to-br from-gray-800/80 to-gray-700/80 text-gray-100 border border-primary/20 rounded-bl-sm'
-                            }
-                            ${msg.pending ? 'opacity-70' : ''}
-                          `}>
-                            <p className="text-sm break-words">{msg.content}</p>
+                          <div className={`px-4 py-2.5 rounded-2xl text-sm transition-all ${
+                            mine
+                              ? 'bg-gradient-neon text-white shadow-glow-cyan rounded-br-sm'
+                              : 'bg-white dark:bg-white/8 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-white/10 rounded-bl-sm shadow-sm'
+                          } ${msg.pending ? 'opacity-60' : ''}`}>
+                            <p className="break-words leading-relaxed">{msg.content}</p>
                           </div>
                           <div className={`flex items-center gap-1 mt-1 ${mine ? 'justify-end' : 'justify-start'}`}>
-                            <p className="text-xs text-gray-500">{formatTime(msg.created_at)}</p>
+                            <p className="text-xs text-slate-400 dark:text-slate-500">{formatTime(msg.created_at)}</p>
                             {msg.pending && (
-                              <div className="w-3 h-3 border border-gray-500 border-t-transparent rounded-full animate-spin" />
+                              <div className="w-3 h-3 border border-slate-400 border-t-transparent rounded-full animate-spin" />
                             )}
                           </div>
                         </div>
@@ -345,32 +291,32 @@ export default function Messages() {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input */}
-              <form onSubmit={sendMessage} className="p-4 bg-gradient-to-r from-gray-900/80 to-gray-800/80 backdrop-blur-sm border-t border-primary/20">
+              {/* Input form */}
+              <form onSubmit={sendMessage} className="p-4 bg-white dark:bg-white/[0.03] backdrop-blur-sm border-t border-slate-200 dark:border-white/8">
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder={`Écrire à ${selectedConversation.username}...`}
-                    className="flex-1 px-4 py-3 bg-gray-900/80 border border-primary/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-light transition-all"
+                    className="flex-1 px-4 py-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-slate-800 dark:text-white text-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400 dark:focus:ring-neon-cyan/60 focus:border-transparent transition-all"
                     maxLength={1000}
                   />
                   <button
                     type="submit"
                     disabled={!newMessage.trim() || sending}
-                    className="px-4 sm:px-6 py-3 bg-gradient-primary hover:shadow-glow-red-lg rounded-xl font-medium transition-all disabled:opacity-50 shadow-glow-red transform hover:scale-105 disabled:hover:scale-100"
+                    className="px-4 py-3 bg-gradient-neon rounded-xl font-medium transition-all disabled:opacity-40 shadow-glow-cyan hover:shadow-glow-cyan-lg hover:scale-105 disabled:hover:scale-100"
                   >
                     {sending ? (
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                       </svg>
                     )}
                   </button>
                 </div>
-                <p className={`text-xs mt-2 transition-colors ${newMessage.length > 900 ? 'text-yellow-500' : 'text-gray-500'}`}>
+                <p className={`text-xs mt-1.5 transition-colors ${newMessage.length > 900 ? 'text-amber-500' : 'text-slate-400 dark:text-slate-500'}`}>
                   {newMessage.length}/1000
                 </p>
               </form>
@@ -378,12 +324,12 @@ export default function Messages() {
           ) : (
             <div className="flex-1 flex items-center justify-center p-4">
               <div className="text-center animate-fade-in">
-                <div className="w-20 h-20 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4 shadow-glow-red animate-float">
-                  <span className="text-4xl">💬</span>
+                <div className="w-16 h-16 bg-gradient-neon rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-glow-cyan animate-float">
+                  <span className="text-3xl">💬</span>
                 </div>
-                <h3 className="text-xl font-semibold mb-2 text-white">Sélectionne une conversation</h3>
-                <p className="text-gray-400 mb-6">Choisis une conversation pour commencer</p>
-                <a href="/matching" className="inline-block px-6 py-3 bg-gradient-primary rounded-lg font-medium transition-all shadow-glow-red hover:shadow-glow-red-lg transform hover:scale-105">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">Sélectionne une conversation</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-5">Choisis une conversation pour commencer</p>
+                <a href="/matching" className="inline-block px-6 py-3 bg-gradient-neon rounded-xl font-semibold text-sm text-white shadow-glow-cyan hover:shadow-glow-cyan-lg transition-all hover:scale-105">
                   Trouver des coéquipiers
                 </a>
               </div>

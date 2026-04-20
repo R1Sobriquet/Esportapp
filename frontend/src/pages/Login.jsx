@@ -1,203 +1,151 @@
-/**
- * Login Page Component
- * Handles user authentication
- */
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
+const INPUT = 'w-full px-4 py-3 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400 dark:focus:ring-neon-cyan/60 focus:border-transparent transition-all text-sm';
+const LABEL = 'block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide';
+
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     if (!formData.email || !formData.password) {
       setError('Email and password are required');
       setLoading(false);
       return;
     }
-
     const result = await login(formData.email, formData.password);
-
-    if (result.success) {
-      navigate('/');
-    } else {
-      setError(result.error || 'Invalid credentials');
-    }
-
+    if (result.success) navigate('/');
+    else setError(result.error || 'Invalid credentials');
     setLoading(false);
   };
 
-  // Quick fill for demo accounts
-  const fillDemoAccount = (accountNumber) => {
-    const demoAccounts = [
+  const fillDemoAccount = (n) => {
+    const accounts = [
       { email: 'alice@example.com', password: 'password123' },
       { email: 'bob@example.com', password: 'password123' },
-      { email: 'charlie@example.com', password: 'password123' }
+      { email: 'charlie@example.com', password: 'password123' },
     ];
-
-    if (demoAccounts[accountNumber]) {
-      setFormData(demoAccounts[accountNumber]);
-    }
+    if (accounts[n]) setFormData(accounts[n]);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-primary-darkest to-gray-950 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <div className="flex justify-center mb-4">
-            <div className="w-20 h-20 bg-gradient-primary rounded-full flex items-center justify-center shadow-glow-red">
+    <div className="min-h-screen bg-slate-50 dark:bg-gaming-dark flex items-center justify-center py-12 px-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/8 rounded-3xl shadow-glass-light dark:shadow-glass p-8 animate-fade-in">
+
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-gradient-neon rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-glow-cyan">
               <span className="text-3xl">🎮</span>
             </div>
+            <h2 className="text-2xl font-extrabold text-slate-800 dark:text-white">Bon retour !</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Connecte-toi à ton compte gaming</p>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold bg-gradient-to-r from-primary-light via-primary to-primary-dark bg-clip-text text-transparent">
-            Bon retour parmi nous
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-400">
-            Connecte-toi à ton compte gaming
-          </p>
-        </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300">
-                Adresse email
-              </label>
+              <label className={LABEL}>Adresse email</label>
               <input
-                id="email"
                 name="email"
                 type="email"
                 autoComplete="email"
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent transition-all"
-                placeholder="Entre ton email"
+                className={INPUT}
+                placeholder="ton@email.com"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300">
-                Mot de passe
-              </label>
+              <label className={LABEL}>Mot de passe</label>
               <input
-                id="password"
                 name="password"
                 type="password"
                 autoComplete="current-password"
                 required
                 value={formData.password}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent transition-all"
-                placeholder="Entre ton mot de passe"
+                className={INPUT}
+                placeholder="••••••••"
               />
             </div>
-          </div>
 
-          {error && (
-            <div className="bg-primary/20 border border-primary/50 rounded-md p-3">
-              <p className="text-primary-light text-sm">{error}</p>
-            </div>
-          )}
+            {error && (
+              <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl p-3">
+                <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+              </div>
+            )}
 
-          <div>
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-primary hover:shadow-glow-red-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-light disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] shadow-glow-red"
+              className="w-full bg-gradient-neon py-3 rounded-xl font-bold text-white shadow-glow-cyan hover:shadow-glow-cyan-lg transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed mt-2"
             >
               {loading ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   Connexion...
-                </div>
-              ) : (
-                'Se connecter'
-              )}
+                </span>
+              ) : 'Se connecter'}
             </button>
-          </div>
 
-          <div className="flex items-center justify-between">
-            <div className="text-sm">
-              <a href="#" className="text-primary-light hover:text-white transition-colors">
+            <div className="flex items-center justify-between text-sm pt-1">
+              <a href="#" className="text-sky-600 dark:text-neon-cyan hover:text-neon-violet transition-colors">
                 Mot de passe oublié ?
               </a>
-            </div>
-            <div className="text-sm">
-              <a href="/register" className="text-primary-light hover:text-white transition-colors">
+              <a href="/register" className="text-sky-600 dark:text-neon-cyan hover:text-neon-violet font-semibold transition-colors">
                 Créer un compte
               </a>
             </div>
-          </div>
-        </form>
+          </form>
 
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-primary/30" />
+          {/* Demo */}
+          <div className="mt-6">
+            <div className="relative mb-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200 dark:border-white/8" />
+              </div>
+              <div className="relative flex justify-center">
+                <span className="px-3 bg-white dark:bg-gaming-surface text-xs text-slate-400 dark:text-slate-500">
+                  Accès démo rapide
+                </span>
+              </div>
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gradient-to-br from-gray-950 via-primary-darkest to-gray-950 text-gray-400">Accès Demo Rapide</span>
-            </div>
-          </div>
-
-          <div className="mt-4 space-y-2">
-            <p className="text-xs text-gray-500 text-center mb-2">
-              Clique pour utiliser un compte démo (password: password123)
+            <p className="text-xs text-slate-400 dark:text-slate-500 text-center mb-3">
+              password: <code className="font-mono">password123</code>
             </p>
             <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => fillDemoAccount(0)}
-                className="px-3 py-2 text-xs bg-gray-900/80 hover:bg-gray-800/80 border border-primary/20 hover:border-primary-light/40 rounded-md text-gray-300 transition-all"
-              >
-                Alice (FPS)
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemoAccount(1)}
-                className="px-3 py-2 text-xs bg-gray-900/80 hover:bg-gray-800/80 border border-primary/20 hover:border-primary-light/40 rounded-md text-gray-300 transition-all"
-              >
-                Bob (MMO)
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemoAccount(2)}
-                className="px-3 py-2 text-xs bg-gray-900/80 hover:bg-gray-800/80 border border-primary/20 hover:border-primary-light/40 rounded-md text-gray-300 transition-all"
-              >
-                Charlie (MOBA)
-              </button>
+              {['Alice (FPS)', 'Bob (MMO)', 'Charlie (MOBA)'].map((label, i) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => fillDemoAccount(i)}
+                  className="py-2 text-xs bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/8 border border-slate-200 dark:border-white/10 rounded-xl text-slate-600 dark:text-slate-300 hover:border-sky-300 dark:hover:border-neon-cyan/30 transition-all font-medium"
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
-        <div className="text-center">
-          <p className="text-gray-400 text-sm">
-            Pas encore de compte ?{' '}
-            <a href="/register" className="text-primary-light hover:text-white font-medium transition-colors">
-              Inscris-toi ici
-            </a>
-          </p>
-        </div>
+        <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-5">
+          Pas encore de compte ?{' '}
+          <a href="/register" className="text-sky-600 dark:text-neon-cyan hover:text-neon-violet font-semibold transition-colors">
+            Inscris-toi ici
+          </a>
+        </p>
       </div>
     </div>
   );
