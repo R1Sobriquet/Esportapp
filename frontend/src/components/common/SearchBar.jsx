@@ -1,8 +1,3 @@
-/**
- * SearchBar Component
- * Global search with autocomplete suggestions
- */
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { searchAPI } from '../../services';
@@ -18,13 +13,11 @@ const SearchBar = ({ className = '' }) => {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
-  // Debounced search for suggestions
   useEffect(() => {
     if (query.length < 2) {
       setSuggestions({ players: [], games: [] });
       return;
     }
-
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
@@ -37,26 +30,21 @@ const SearchBar = ({ className = '' }) => {
         setLoading(false);
       }
     }, 300);
-
     return () => clearTimeout(timer);
   }, [query]);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setIsOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Keyboard navigation
   const handleKeyDown = (e) => {
     const totalItems = suggestions.players.length + suggestions.games.length;
-
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       setSelectedIndex(prev => (prev < totalItems - 1 ? prev + 1 : 0));
@@ -66,19 +54,15 @@ const SearchBar = ({ className = '' }) => {
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (selectedIndex >= 0) {
-        // Select highlighted item
         if (selectedIndex < suggestions.players.length) {
           const player = suggestions.players[selectedIndex];
           navigate(`/messages?user=${player.id}&username=${encodeURIComponent(player.username)}`);
         } else {
-          const gameIndex = selectedIndex - suggestions.players.length;
-          const game = suggestions.games[gameIndex];
+          const game = suggestions.games[selectedIndex - suggestions.players.length];
           navigate(`/games?search=${encodeURIComponent(game.name)}`);
         }
-        setQuery('');
-        setIsOpen(false);
+        setQuery(''); setIsOpen(false);
       } else if (query.length >= 2) {
-        // Search with current query
         navigate(`/search?q=${encodeURIComponent(query)}`);
         setIsOpen(false);
       }
@@ -94,8 +78,7 @@ const SearchBar = ({ className = '' }) => {
     } else {
       navigate(`/games?search=${encodeURIComponent(item.name)}`);
     }
-    setQuery('');
-    setIsOpen(false);
+    setQuery(''); setIsOpen(false);
   };
 
   const hasSuggestions = suggestions.players.length > 0 || suggestions.games.length > 0;
@@ -111,11 +94,11 @@ const SearchBar = ({ className = '' }) => {
           onFocus={() => query.length >= 2 && setIsOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder="Rechercher..."
-          className="w-full pl-10 pr-4 py-2 bg-gray-900/80 border border-primary/30 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-light/50 focus:border-primary-light transition-all"
+          className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-white/8 border border-slate-200 dark:border-white/10 rounded-xl text-slate-800 dark:text-white text-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-400 dark:focus:ring-neon-cyan/50 focus:border-transparent transition-all"
         />
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
           {loading ? (
-            <div className="w-4 h-4 border-2 border-gray-500 border-t-primary-light rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-slate-300 dark:border-slate-600 border-t-sky-500 dark:border-t-neon-cyan rounded-full animate-spin" />
           ) : (
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -124,36 +107,33 @@ const SearchBar = ({ className = '' }) => {
         </div>
       </div>
 
-      {/* Suggestions Dropdown */}
       {isOpen && hasSuggestions && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-primary/30 rounded-lg shadow-lg shadow-black/50 overflow-hidden z-50 animate-fade-in">
-          {/* Players */}
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gaming-surface border border-slate-200 dark:border-white/10 rounded-xl shadow-lg dark:shadow-glass overflow-hidden z-50 animate-fade-in">
           {suggestions.players.length > 0 && (
             <div>
-              <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase bg-gray-800/50">
+              <div className="px-3 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide bg-slate-50 dark:bg-white/5">
                 Joueurs
               </div>
               {suggestions.players.map((player, index) => (
                 <button
                   key={player.id}
                   onClick={() => handleSelect('player', player)}
-                  className={`w-full px-3 py-2 flex items-center gap-3 transition-colors text-left ${
+                  className={`w-full px-3 py-2.5 flex items-center gap-3 transition-colors text-left text-sm ${
                     selectedIndex === index
-                      ? 'bg-primary/20 text-white'
-                      : 'hover:bg-gray-800 text-gray-300'
+                      ? 'bg-sky-50 dark:bg-neon-cyan/10 text-sky-700 dark:text-neon-cyan'
+                      : 'hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300'
                   }`}
                 >
                   <Avatar src={player.avatar_url} username={player.username} size={32} />
-                  <span className="truncate">{player.username}</span>
+                  <span className="truncate font-medium">{player.username}</span>
                 </button>
               ))}
             </div>
           )}
 
-          {/* Games */}
           {suggestions.games.length > 0 && (
             <div>
-              <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase bg-gray-800/50">
+              <div className="px-3 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide bg-slate-50 dark:bg-white/5">
                 Jeux
               </div>
               {suggestions.games.map((game, index) => {
@@ -162,22 +142,22 @@ const SearchBar = ({ className = '' }) => {
                   <button
                     key={game.id}
                     onClick={() => handleSelect('game', game)}
-                    className={`w-full px-3 py-2 flex items-center gap-3 transition-colors text-left ${
+                    className={`w-full px-3 py-2.5 flex items-center gap-3 transition-colors text-left text-sm ${
                       selectedIndex === itemIndex
-                        ? 'bg-primary/20 text-white'
-                        : 'hover:bg-gray-800 text-gray-300'
+                        ? 'bg-sky-50 dark:bg-neon-cyan/10 text-sky-700 dark:text-neon-cyan'
+                        : 'hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300'
                     }`}
                   >
                     {game.icon_url ? (
-                      <img src={game.icon_url} alt={game.name} className="w-8 h-8 rounded" />
+                      <img src={game.icon_url} alt={game.name} className="w-8 h-8 rounded-lg shrink-0" />
                     ) : (
-                      <div className="w-8 h-8 bg-gradient-primary rounded flex items-center justify-center text-sm">
+                      <div className="w-8 h-8 bg-gradient-neon rounded-lg flex items-center justify-center text-sm shrink-0">
                         🎮
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <span className="truncate block">{game.name}</span>
-                      <span className="text-xs text-gray-500">{game.player_count} joueurs</span>
+                      <span className="truncate block font-medium">{game.name}</span>
+                      <span className="text-xs text-slate-400 dark:text-slate-500">{game.player_count} joueurs</span>
                     </div>
                   </button>
                 );
@@ -185,14 +165,10 @@ const SearchBar = ({ className = '' }) => {
             </div>
           )}
 
-          {/* Search all */}
           {query.length >= 2 && (
             <button
-              onClick={() => {
-                navigate(`/search?q=${encodeURIComponent(query)}`);
-                setIsOpen(false);
-              }}
-              className="w-full px-3 py-2 text-sm text-primary-light hover:bg-gray-800 transition-colors text-center border-t border-gray-800"
+              onClick={() => { navigate(`/search?q=${encodeURIComponent(query)}`); setIsOpen(false); }}
+              className="w-full px-3 py-2.5 text-sm text-sky-600 dark:text-neon-cyan hover:bg-slate-50 dark:hover:bg-white/5 transition-colors text-center border-t border-slate-100 dark:border-white/8 font-medium"
             >
               Voir tous les résultats pour "{query}"
             </button>

@@ -1,8 +1,3 @@
-/**
- * ThemeToggle Component
- * Button to switch between dark and light themes
- */
-
 import React from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -13,16 +8,15 @@ const ThemeToggle = ({ className = '' }) => {
     <button
       onClick={toggleTheme}
       className={`relative p-2 rounded-lg transition-all duration-300
-        hover:bg-gray-800/50 dark:hover:bg-gray-700/50
-        focus:outline-none focus:ring-2 focus:ring-primary-light/50
+        hover:bg-slate-100 dark:hover:bg-white/8
+        focus:outline-none focus:ring-2 focus:ring-sky-400 dark:focus:ring-neon-cyan/50
         ${className}`}
       aria-label={isDark ? 'Activer le mode clair' : 'Activer le mode sombre'}
       title={isDark ? 'Mode clair' : 'Mode sombre'}
     >
       <div className="relative w-6 h-6">
-        {/* Sun icon */}
         <svg
-          className={`absolute inset-0 w-6 h-6 text-yellow-400 transition-all duration-300 transform
+          className={`absolute inset-0 w-6 h-6 text-amber-500 transition-all duration-300 transform
             ${isDark ? 'opacity-0 rotate-90 scale-0' : 'opacity-100 rotate-0 scale-100'}`}
           fill="none"
           stroke="currentColor"
@@ -36,9 +30,8 @@ const ThemeToggle = ({ className = '' }) => {
           />
         </svg>
 
-        {/* Moon icon */}
         <svg
-          className={`absolute inset-0 w-6 h-6 text-primary-light transition-all duration-300 transform
+          className={`absolute inset-0 w-6 h-6 text-neon-cyan transition-all duration-300 transform
             ${isDark ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-0'}`}
           fill="none"
           stroke="currentColor"
