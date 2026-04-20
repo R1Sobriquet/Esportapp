@@ -1,70 +1,61 @@
-/**
- * Home Page Component
- * Dashboard for authenticated users, landing page with stats for guests
- */
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { matchingAPI, gamesAPI, statsAPI } from '../services';
 import { WelcomeMessage, Avatar, SkeletonCard, SkeletonStat } from '../components';
 
-/**
- * Player Card Component
- * Displays a player's info in a card format
- */
+const CARD_BASE = 'bg-white dark:bg-white/5 backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-white/8 shadow-sm dark:shadow-glass transition-all';
+
 const PlayerCard = ({ player, index, variant = 'default' }) => {
-  const variantStyles = {
-    default: 'border-primary/20 hover:border-primary-light/40',
-    popular: 'border-yellow-500/30 hover:border-yellow-500/60',
-    active: 'border-green-500/30 hover:border-green-500/60',
-    matches: 'border-purple-500/30 hover:border-purple-500/60',
+  const hoverBorder = {
+    default: 'hover:border-sky-400/40 dark:hover:border-neon-cyan/30',
+    popular: 'hover:border-yellow-400/50',
+    active: 'hover:border-emerald-400/50',
+    matches: 'hover:border-neon-violet/50',
   };
 
-  const badgeStyles = {
-    popular: 'bg-gradient-to-r from-yellow-500 to-amber-500',
-    active: 'bg-gradient-to-r from-green-500 to-emerald-500',
-    matches: 'bg-gradient-to-r from-purple-500 to-violet-500',
+  const badgeGradient = {
+    popular: 'from-yellow-400 to-amber-500',
+    active: 'from-emerald-400 to-green-500',
+    matches: 'from-neon-violetLight to-neon-violet',
   };
 
   return (
     <div
-      className={`bg-gradient-to-br from-gray-900/80 to-gray-800/80 rounded-xl border ${variantStyles[variant]} p-4 transition-all hover:shadow-lg animate-fade-in group`}
-      style={{ animationDelay: `${index * 100}ms` }}
+      className={`${CARD_BASE} ${hoverBorder[variant]} p-4 animate-fade-in group`}
+      style={{ animationDelay: `${index * 80}ms` }}
     >
       <div className="flex items-center gap-3">
-        <div className="relative">
+        <div className="relative flex-shrink-0">
           <Avatar
             src={player.avatar_url}
             username={player.username}
-            size={48}
-            className="ring-2 ring-primary-light/30 group-hover:ring-primary-light/60 transition-all"
+            size={44}
+            className="ring-2 ring-slate-200 dark:ring-white/10 group-hover:ring-sky-400/40 dark:group-hover:ring-neon-cyan/30 transition-all"
           />
           {variant !== 'default' && index < 3 && (
-            <div className={`absolute -top-1 -right-1 w-5 h-5 ${badgeStyles[variant]} rounded-full flex items-center justify-center text-xs font-bold shadow-lg`}>
+            <div className={`absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br ${badgeGradient[variant]} rounded-full flex items-center justify-center text-xs font-bold text-white shadow`}>
               {index + 1}
             </div>
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="font-semibold text-white truncate">{player.username}</h4>
-          <p className="text-xs text-gray-400 truncate">
-            {player.games || 'Aucun jeu favori'}
-          </p>
+          <h4 className="font-semibold text-slate-800 dark:text-slate-100 truncate text-sm">{player.username}</h4>
+          <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{player.games || 'Aucun jeu favori'}</p>
           {player.skill_level && (
-            <span className="text-xs text-primary-light">{player.skill_level}</span>
+            <span className="text-xs text-sky-600 dark:text-neon-cyan font-medium">{player.skill_level}</span>
           )}
         </div>
       </div>
       {(player.match_count !== undefined || player.accepted_count !== undefined) && (
-        <div className="mt-3 pt-3 border-t border-gray-700/50 flex items-center justify-between text-xs">
-          <span className="text-gray-400">
+        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between text-xs">
+          <span className="text-slate-400">
             {player.accepted_count !== undefined ? `${player.accepted_count} matchs` : `${player.match_count} matchs`}
           </span>
           <a
             href={`/messages?user=${player.id}&username=${encodeURIComponent(player.username)}`}
-            className="text-primary-light hover:text-white transition-colors"
+            className="text-sky-600 dark:text-neon-cyan hover:text-neon-violet dark:hover:text-neon-violetLight transition-colors font-medium"
           >
-            Contacter
+            Contacter →
           </a>
         </div>
       )}
@@ -72,40 +63,36 @@ const PlayerCard = ({ player, index, variant = 'default' }) => {
   );
 };
 
-/**
- * Stat Card Component
- * Displays a platform statistic
- */
 const StatCard = ({ label, value, icon, color = 'primary', index }) => {
-  const colorStyles = {
-    primary: 'from-primary-light to-primary',
-    green: 'from-green-400 to-green-600',
-    purple: 'from-purple-400 to-purple-600',
-    blue: 'from-blue-400 to-blue-600',
-    yellow: 'from-yellow-400 to-yellow-600',
+  const iconBg = {
+    primary: 'bg-gradient-neon shadow-glow-cyan',
+    green: 'bg-gradient-to-br from-emerald-400 to-green-500 shadow-lg shadow-emerald-400/30',
+    purple: 'bg-gradient-to-br from-neon-violetLight to-neon-violet shadow-glow-violet',
+    blue: 'bg-gradient-to-br from-sky-400 to-blue-500 shadow-lg shadow-sky-400/30',
+    yellow: 'bg-gradient-to-br from-yellow-400 to-amber-500 shadow-lg shadow-yellow-400/30',
   };
 
-  const iconBgStyles = {
-    primary: 'bg-gradient-primary shadow-glow-red',
-    green: 'bg-gradient-to-br from-green-600 to-green-500 shadow-lg shadow-green-500/50',
-    purple: 'bg-gradient-to-br from-purple-600 to-purple-500 shadow-lg shadow-purple-500/50',
-    blue: 'bg-gradient-to-br from-blue-600 to-blue-500 shadow-lg shadow-blue-500/50',
-    yellow: 'bg-gradient-to-br from-yellow-600 to-yellow-500 shadow-lg shadow-yellow-500/50',
+  const valueGradient = {
+    primary: 'from-sky-500 to-neon-violet dark:from-neon-cyan dark:to-neon-violet',
+    green: 'from-emerald-500 to-green-600 dark:from-emerald-400 dark:to-green-500',
+    purple: 'from-neon-violet to-neon-violetLight',
+    blue: 'from-sky-500 to-blue-600 dark:from-sky-400 dark:to-blue-500',
+    yellow: 'from-yellow-500 to-amber-600 dark:from-yellow-400 dark:to-amber-500',
   };
 
   return (
     <div
-      className="bg-gradient-to-br from-gray-900/80 to-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-primary/20 hover:border-primary-light/40 transition-all shadow-lg hover:shadow-glow-red animate-fade-in"
-      style={{ animationDelay: `${index * 100}ms` }}
+      className={`${CARD_BASE} p-6 hover:shadow-md dark:hover:shadow-glow-cyan/10 animate-fade-in`}
+      style={{ animationDelay: `${index * 80}ms` }}
     >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-gray-400 text-sm">{label}</p>
-          <p className={`text-3xl font-bold bg-gradient-to-r ${colorStyles[color]} bg-clip-text text-transparent`}>
+          <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wide">{label}</p>
+          <p className={`text-3xl font-extrabold mt-1 bg-gradient-to-r ${valueGradient[color]} bg-clip-text text-transparent`}>
             {typeof value === 'number' ? value.toLocaleString() : value}
           </p>
         </div>
-        <div className={`w-14 h-14 ${iconBgStyles[color]} rounded-full flex items-center justify-center text-2xl`}>
+        <div className={`w-12 h-12 ${iconBg[color]} rounded-xl flex items-center justify-center text-xl`}>
           {icon}
         </div>
       </div>
@@ -113,19 +100,14 @@ const StatCard = ({ label, value, icon, color = 'primary', index }) => {
   );
 };
 
-/**
- * Section Header Component
- */
 const SectionHeader = ({ title, subtitle, action }) => (
-  <div className="flex items-center justify-between mb-6">
+  <div className="flex items-center justify-between mb-5">
     <div>
-      <h2 className="text-2xl font-bold bg-gradient-to-r from-primary-light to-primary bg-clip-text text-transparent">
-        {title}
-      </h2>
-      {subtitle && <p className="text-sm text-gray-400 mt-1">{subtitle}</p>}
+      <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">{title}</h2>
+      {subtitle && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{subtitle}</p>}
     </div>
     {action && (
-      <a href={action.href} className="text-sm text-primary-light hover:text-white transition-colors">
+      <a href={action.href} className="text-xs font-semibold text-sky-600 dark:text-neon-cyan hover:text-neon-violet dark:hover:text-neon-violetLight transition-colors">
         {action.label} →
       </a>
     )}
@@ -134,11 +116,7 @@ const SectionHeader = ({ title, subtitle, action }) => (
 
 export default function Home() {
   const { user } = useAuth();
-  const [stats, setStats] = useState({
-    totalGames: 0,
-    totalMatches: 0,
-    activeConversations: 0
-  });
+  const [stats, setStats] = useState({ totalGames: 0, totalMatches: 0, activeConversations: 0 });
   const [platformStats, setPlatformStats] = useState(null);
   const [popularPlayers, setPopularPlayers] = useState([]);
   const [recentlyActive, setRecentlyActive] = useState([]);
@@ -147,17 +125,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [loadingPublic, setLoadingPublic] = useState(true);
 
-  // Load public data (for everyone)
-  useEffect(() => {
-    loadPublicData();
-  }, []);
-
-  // Load user-specific data
-  useEffect(() => {
-    if (user) {
-      loadDashboardData();
-    }
-  }, [user]);
+  useEffect(() => { loadPublicData(); }, []);
+  useEffect(() => { if (user) loadDashboardData(); }, [user]);
 
   const loadPublicData = async () => {
     try {
@@ -167,7 +136,6 @@ export default function Home() {
         statsAPI.getRecentlyActive(6),
         statsAPI.getTopMatchers(6),
       ]);
-
       setPlatformStats(platformRes.data);
       setPopularPlayers(popularRes.data.players || []);
       setRecentlyActive(activeRes.data.players || []);
@@ -185,13 +153,11 @@ export default function Home() {
         gamesAPI.getUserGames(),
         matchingAPI.getMatches()
       ]);
-
       setStats({
         totalGames: gamesRes.data.length,
         totalMatches: matchesRes.data.matches.filter(m => m.status === 'accepted').length,
         activeConversations: 0
       });
-
       setRecentMatches(matchesRes.data.matches.slice(0, 3));
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
@@ -200,66 +166,75 @@ export default function Home() {
     }
   };
 
-  // Landing page for guests
+  /* ─── Guest landing ─── */
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-primary-darkest to-gray-950 text-white">
-        {/* Hero Section */}
-        <div className="container mx-auto px-4 py-16">
-          <div className="text-center animate-fade-in">
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary-light via-primary to-primary-dark bg-clip-text text-transparent">
+      <div className="min-h-screen bg-slate-50 dark:bg-gaming-dark text-slate-900 dark:text-white">
+
+        {/* Hero */}
+        <div className="container mx-auto px-4 py-20">
+          <div className="text-center animate-fade-in max-w-4xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-50 dark:bg-neon-cyan/10 border border-sky-200 dark:border-neon-cyan/20 text-sky-600 dark:text-neon-cyan text-sm font-semibold mb-8">
+              <span className="w-2 h-2 rounded-full bg-sky-500 dark:bg-neon-cyan animate-pulse" />
+              Plateforme Gaming Social
+            </div>
+
+            <h1 className="text-6xl md:text-8xl font-extrabold mb-6 bg-gradient-to-r from-sky-500 to-neon-violet dark:from-neon-cyan dark:to-neon-violet bg-clip-text text-transparent leading-none tracking-tight">
               GameConnect
             </h1>
-            <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-slate-500 dark:text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed">
               Trouve tes coéquipiers parfaits. Connecte-toi avec des joueurs qui partagent ta passion,
               ton niveau et tes créneaux de jeu.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
                 href="/register"
-                className="bg-gradient-glow hover:shadow-glow-red-lg px-8 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 shadow-glow-red"
+                className="bg-gradient-neon px-8 py-4 rounded-2xl font-bold text-white shadow-glow-cyan hover:shadow-glow-cyan-lg transition-all hover:scale-105"
               >
                 Commencer gratuitement
               </a>
               <a
                 href="/login"
-                className="border-2 border-primary hover:border-primary-light px-8 py-3 rounded-lg font-semibold transition-all hover:bg-primary/10"
+                className="px-8 py-4 rounded-2xl font-semibold border border-slate-200 dark:border-white/15 text-slate-700 dark:text-slate-200 hover:border-sky-400/50 dark:hover:border-neon-cyan/40 hover:text-sky-600 dark:hover:text-neon-cyan transition-all hover:bg-sky-50 dark:hover:bg-neon-cyan/5"
               >
                 Connexion
               </a>
             </div>
           </div>
 
-          {/* Features */}
-          <div className="mt-16 grid md:grid-cols-3 gap-8">
+          {/* Feature Bento — 3 cards */}
+          <div className="mt-24 grid md:grid-cols-3 gap-5">
             {[
-              { icon: '🎮', title: 'Matching Intelligent', desc: 'Notre algorithme te met en relation avec des joueurs selon tes jeux, niveau et disponibilités.' },
-              { icon: '💬', title: 'Messagerie Directe', desc: 'Discute avec tes coéquipiers et organise tes sessions de jeu.' },
-              { icon: '👥', title: 'Communauté Gaming', desc: 'Rejoins une communauté de joueurs passionnés et trouve tes futurs coéquipiers.' },
+              { icon: '🎮', title: 'Matching Intelligent', desc: 'Notre algorithme te met en relation avec des joueurs selon tes jeux, niveau et disponibilités.', accent: 'from-neon-cyan/10 to-neon-cyan/5 dark:from-neon-cyan/15 dark:to-transparent' },
+              { icon: '💬', title: 'Messagerie Directe', desc: 'Discute avec tes coéquipiers et organise tes sessions de jeu.', accent: 'from-neon-violet/10 to-neon-violet/5 dark:from-neon-violet/20 dark:to-transparent' },
+              { icon: '👥', title: 'Communauté Gaming', desc: 'Rejoins une communauté de joueurs passionnés et trouve tes futurs coéquipiers.', accent: 'from-sky-100 to-sky-50 dark:from-sky-500/15 dark:to-transparent' },
             ].map((feature, index) => (
               <div
                 key={feature.title}
-                className="text-center p-6 bg-gradient-to-br from-gray-900/50 to-gray-800/50 backdrop-blur-sm rounded-xl border border-primary/20 hover:border-primary-light/40 transition-all shadow-lg hover:shadow-glow-red animate-fade-in"
+                className={`relative p-7 ${CARD_BASE} hover:border-sky-300 dark:hover:border-neon-cyan/30 hover:shadow-md dark:hover:shadow-glow-cyan/10 overflow-hidden group animate-fade-in`}
                 style={{ animationDelay: `${index * 150}ms` }}
               >
-                <div className="w-20 h-20 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-glow-red animate-float">
-                  {feature.icon}
+                <div className={`absolute inset-0 bg-gradient-to-br ${feature.accent} opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl`} />
+                <div className="relative">
+                  <div className="w-14 h-14 bg-gradient-neon rounded-2xl flex items-center justify-center text-2xl mb-5 shadow-glow-cyan group-hover:scale-110 transition-transform duration-300">
+                    {feature.icon}
+                  </div>
+                  <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 mb-2">{feature.title}</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{feature.desc}</p>
                 </div>
-                <h3 className="text-xl font-semibold mb-2 text-primary-light">{feature.title}</h3>
-                <p className="text-gray-400">{feature.desc}</p>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Platform Stats */}
+        {/* Platform Stats bar */}
         {platformStats && (
-          <div className="bg-gradient-to-r from-gray-900/50 via-primary-darkest/50 to-gray-900/50 py-12">
+          <div className="bg-slate-100 dark:bg-white/[0.02] border-y border-slate-200 dark:border-white/5 py-14">
             <div className="container mx-auto px-4">
-              <h2 className="text-center text-2xl font-bold mb-8 bg-gradient-to-r from-primary-light to-primary bg-clip-text text-transparent">
+              <h2 className="text-center text-xl font-bold mb-8 text-slate-700 dark:text-slate-200">
                 Une communauté active
               </h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <StatCard label="Joueurs" value={platformStats.total_users} icon="👥" color="primary" index={0} />
                 <StatCard label="Jeux" value={platformStats.total_games} icon="🎮" color="green" index={1} />
                 <StatCard label="Matchs réussis" value={platformStats.total_matches} icon="🤝" color="purple" index={2} />
@@ -269,32 +244,24 @@ export default function Home() {
           </div>
         )}
 
-        {/* Popular Players Section */}
+        {/* Popular Players */}
         {popularPlayers.length > 0 && (
-          <div className="container mx-auto px-4 py-12">
-            <SectionHeader
-              title="Joueurs Populaires"
-              subtitle="Les joueurs les plus actifs de la communauté"
-            />
+          <div className="container mx-auto px-4 py-14">
+            <SectionHeader title="Joueurs Populaires" subtitle="Les joueurs les plus actifs de la communauté" />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {loadingPublic ? (
-                [1, 2, 3, 4, 5, 6].map(i => <SkeletonCard key={i} />)
-              ) : (
-                popularPlayers.map((player, index) => (
-                  <PlayerCard key={player.id} player={player} index={index} variant="popular" />
-                ))
-              )}
+              {loadingPublic
+                ? [1, 2, 3, 4, 5, 6].map(i => <SkeletonCard key={i} />)
+                : popularPlayers.map((player, index) => (
+                    <PlayerCard key={player.id} player={player} index={index} variant="popular" />
+                  ))}
             </div>
           </div>
         )}
 
-        {/* Recently Active Section */}
+        {/* Recently Active */}
         {recentlyActive.length > 0 && (
-          <div className="container mx-auto px-4 py-12">
-            <SectionHeader
-              title="Récemment Actifs"
-              subtitle="Joueurs connectés ces derniers jours"
-            />
+          <div className="container mx-auto px-4 pb-10">
+            <SectionHeader title="Récemment Actifs" subtitle="Joueurs connectés ces derniers jours" />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {recentlyActive.map((player, index) => (
                 <PlayerCard key={player.id} player={player} index={index} variant="active" />
@@ -303,13 +270,10 @@ export default function Home() {
           </div>
         )}
 
-        {/* Top Matchers Section */}
+        {/* Top Matchers */}
         {topMatchers.length > 0 && (
-          <div className="container mx-auto px-4 py-12">
-            <SectionHeader
-              title="Plus de Matchs"
-              subtitle="Les joueurs avec le plus de connexions"
-            />
+          <div className="container mx-auto px-4 pb-10">
+            <SectionHeader title="Plus de Matchs" subtitle="Les joueurs avec le plus de connexions" />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {topMatchers.map((player, index) => (
                 <PlayerCard key={player.id} player={player} index={index} variant="matches" />
@@ -319,31 +283,37 @@ export default function Home() {
         )}
 
         {/* CTA Section */}
-        <div className="container mx-auto px-4 py-16">
-          <div className="bg-gradient-to-r from-primary-dark via-primary to-primary-dark rounded-2xl p-8 md:p-12 text-center shadow-glow-red-lg">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Prêt à rejoindre la communauté ?</h2>
-            <p className="text-lg text-gray-200 mb-8 max-w-xl mx-auto">
-              Inscris-toi gratuitement et commence à trouver tes futurs coéquipiers dès aujourd'hui.
-            </p>
-            <a
-              href="/register"
-              className="inline-block bg-white text-primary-dark px-8 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 hover:shadow-xl"
-            >
-              Créer mon compte
-            </a>
+        <div className="container mx-auto px-4 py-20">
+          <div className="relative rounded-3xl p-10 md:p-16 text-center overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-neon opacity-[0.08] rounded-3xl" />
+            <div className="absolute inset-0 bg-white dark:bg-white/[0.03] backdrop-blur-sm rounded-3xl border border-sky-200 dark:border-neon-cyan/20" />
+            <div className="relative">
+              <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-slate-800 dark:text-white">
+                Prêt à rejoindre la communauté ?
+              </h2>
+              <p className="text-base text-slate-500 dark:text-slate-300 mb-8 max-w-lg mx-auto leading-relaxed">
+                Inscris-toi gratuitement et commence à trouver tes futurs coéquipiers dès aujourd'hui.
+              </p>
+              <a
+                href="/register"
+                className="inline-block bg-gradient-neon px-10 py-4 rounded-2xl font-bold text-white shadow-glow-cyan hover:shadow-glow-cyan-lg transition-all hover:scale-105"
+              >
+                Créer mon compte
+              </a>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // Dashboard for authenticated users
+  /* ─── Loading skeleton ─── */
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-primary-darkest to-gray-950 text-white">
+      <div className="min-h-screen bg-slate-50 dark:bg-gaming-dark">
         <div className="container mx-auto px-4 py-8">
-          <div className="h-8 w-64 bg-gray-700 rounded animate-pulse mb-8" />
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="h-8 w-64 bg-slate-200 dark:bg-white/10 rounded-xl animate-pulse mb-8" />
+          <div className="grid md:grid-cols-3 gap-4 mb-6">
             {[1, 2, 3].map(i => <SkeletonStat key={i} />)}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -354,80 +324,100 @@ export default function Home() {
     );
   }
 
+  /* ─── Authenticated dashboard ─── */
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-primary-darkest to-gray-950 text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-gaming-dark text-slate-900 dark:text-white">
       <div className="container mx-auto px-4 py-8">
-        {/* Welcome Message */}
+
         <WelcomeMessage />
 
-        {/* User Stats Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        {/* Stats row */}
+        <div className="grid md:grid-cols-3 gap-4 mb-6">
           <StatCard label="Jeux dans mon profil" value={stats.totalGames} icon="🎮" color="primary" index={0} />
           <StatCard label="Matchs Actifs" value={stats.totalMatches} icon="🤝" color="green" index={1} />
           <StatCard label="Conversations" value={stats.activeConversations} icon="💬" color="purple" index={2} />
         </div>
 
-        {/* Recent Matches */}
-        <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/80 backdrop-blur-sm rounded-xl p-6 mb-8 border border-primary/20 shadow-lg">
-          <SectionHeader
-            title="Matchs Récents"
-            action={{ href: '/matching', label: 'Voir tout' }}
-          />
-          {recentMatches.length > 0 ? (
-            <div className="space-y-4">
-              {recentMatches.map((match, index) => (
-                <div
-                  key={match.match_id}
-                  className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-800/50 to-gray-700/50 rounded-lg border border-primary/10 hover:border-primary-light/30 transition-all animate-fade-in"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <div className="flex items-center gap-3">
-                    <Avatar
-                      src={match.avatar_url}
-                      username={match.username}
-                      size={40}
-                      className="ring-2 ring-primary-light/50"
-                    />
-                    <div>
-                      <p className="font-medium">{match.username}</p>
-                      <p className="text-sm text-gray-400">{match.games}</p>
+        {/* Bento row — Recent Matches + Quick Actions */}
+        <div className="grid lg:grid-cols-3 gap-5 mb-6">
+
+          {/* Recent Matches — 2/3 */}
+          <div className={`lg:col-span-2 ${CARD_BASE} p-6`}>
+            <SectionHeader title="Matchs Récents" action={{ href: '/matching', label: 'Voir tout' }} />
+            {recentMatches.length > 0 ? (
+              <div className="space-y-3">
+                {recentMatches.map((match, index) => (
+                  <div
+                    key={match.match_id}
+                    className="flex items-center justify-between p-4 bg-slate-50 dark:bg-white/[0.03] rounded-xl border border-slate-100 dark:border-white/5 hover:border-sky-300 dark:hover:border-neon-cyan/20 transition-all animate-fade-in"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Avatar src={match.avatar_url} username={match.username} size={40} className="ring-2 ring-sky-400/30 dark:ring-neon-cyan/20" />
+                      <div>
+                        <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{match.username}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">{match.games}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                        match.status === 'accepted'
+                          ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+                          : 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400'
+                      }`}>
+                        {match.status === 'accepted' ? 'Accepté' : 'En attente'}
+                      </span>
+                      <p className="text-xs mt-1 font-semibold bg-gradient-to-r from-sky-500 to-neon-violet dark:from-neon-cyan dark:to-neon-violet bg-clip-text text-transparent">
+                        {match.match_score}% compat.
+                      </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className={`px-3 py-1 rounded-full text-xs ${
-                      match.status === 'accepted' ? 'bg-green-600' : 'bg-yellow-600'
-                    }`}>
-                      {match.status === 'accepted' ? 'Accepté' : 'En attente'}
-                    </div>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {match.match_score}% de compatibilité
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-400">
-              <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4 shadow-glow-red animate-float">
-                <span className="text-2xl">🔍</span>
+                ))}
               </div>
-              <p className="mb-2">Pas encore de matchs</p>
-              <a href="/matching" className="text-primary-light hover:underline">
-                Trouve tes coéquipiers !
-              </a>
-            </div>
-          )}
+            ) : (
+              <div className="text-center py-10">
+                <div className="w-12 h-12 bg-gradient-neon rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-glow-cyan animate-float">
+                  <span className="text-xl">🔍</span>
+                </div>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">Pas encore de matchs</p>
+                <a href="/matching" className="text-sm font-semibold text-sky-600 dark:text-neon-cyan hover:text-neon-violet dark:hover:text-neon-violetLight transition-colors">
+                  Trouve tes coéquipiers !
+                </a>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Actions — 1/3 */}
+          <div className="flex flex-col gap-4">
+            <a
+              href="/matching"
+              className="flex-1 bg-gradient-neon p-6 rounded-2xl text-center transition-all shadow-glow-cyan hover:shadow-glow-cyan-lg hover:scale-[1.02] group"
+            >
+              <div className="text-3xl mb-2">🔍</div>
+              <p className="font-bold text-white text-sm">Trouver des Matchs</p>
+            </a>
+            <a
+              href="/messages"
+              className={`flex-1 ${CARD_BASE} p-6 text-center hover:border-neon-violet/40 dark:hover:border-neon-violet/50 hover:shadow-md group`}
+            >
+              <div className="text-3xl mb-2">💬</div>
+              <p className="font-semibold text-neon-violet text-sm">Messages</p>
+            </a>
+            <a
+              href="/games"
+              className={`flex-1 ${CARD_BASE} p-6 text-center hover:border-emerald-400/40 dark:hover:border-emerald-400/40 hover:shadow-md group`}
+            >
+              <div className="text-3xl mb-2">🎮</div>
+              <p className="font-semibold text-emerald-600 dark:text-emerald-400 text-sm">Mes Jeux</p>
+            </a>
+          </div>
         </div>
 
-        {/* Community Sections */}
-        <div className="grid lg:grid-cols-2 gap-8 mb-8">
-          {/* Popular Players */}
+        {/* Community row */}
+        <div className="grid lg:grid-cols-2 gap-5 mb-6">
           {popularPlayers.length > 0 && (
-            <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-primary/20 shadow-lg">
-              <SectionHeader
-                title="Joueurs Populaires"
-                subtitle="Les plus actifs"
-              />
+            <div className={`${CARD_BASE} p-6`}>
+              <SectionHeader title="Joueurs Populaires" subtitle="Les plus actifs" />
               <div className="space-y-3">
                 {popularPlayers.slice(0, 4).map((player, index) => (
                   <PlayerCard key={player.id} player={player} index={index} variant="popular" />
@@ -435,14 +425,9 @@ export default function Home() {
               </div>
             </div>
           )}
-
-          {/* Recently Active */}
           {recentlyActive.length > 0 && (
-            <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-primary/20 shadow-lg">
-              <SectionHeader
-                title="Récemment Actifs"
-                subtitle="Connectés récemment"
-              />
+            <div className={`${CARD_BASE} p-6`}>
+              <SectionHeader title="Récemment Actifs" subtitle="Connectés récemment" />
               <div className="space-y-3">
                 {recentlyActive.slice(0, 4).map((player, index) => (
                   <PlayerCard key={player.id} player={player} index={index} variant="active" />
@@ -452,13 +437,10 @@ export default function Home() {
           )}
         </div>
 
-        {/* Top Matchers Section */}
+        {/* Top Matchers */}
         {topMatchers.length > 0 && (
-          <div className="bg-gradient-to-br from-gray-900/80 to-gray-800/80 backdrop-blur-sm rounded-xl p-6 mb-8 border border-primary/20 shadow-lg">
-            <SectionHeader
-              title="Plus de Matchs"
-              subtitle="Joueurs avec le plus de connexions"
-            />
+          <div className={`${CARD_BASE} p-6`}>
+            <SectionHeader title="Plus de Matchs" subtitle="Joueurs avec le plus de connexions" />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {topMatchers.slice(0, 6).map((player, index) => (
                 <PlayerCard key={player.id} player={player} index={index} variant="matches" />
@@ -466,31 +448,6 @@ export default function Home() {
             </div>
           </div>
         )}
-
-        {/* Quick Actions */}
-        <div className="grid md:grid-cols-3 gap-4">
-          <a
-            href="/matching"
-            className="bg-gradient-glow p-6 rounded-xl text-center transition-all shadow-glow-red hover:shadow-glow-red-lg transform hover:scale-105"
-          >
-            <div className="text-3xl mb-2">🔍</div>
-            <p className="font-medium">Trouver des Matchs</p>
-          </a>
-          <a
-            href="/messages"
-            className="bg-gradient-to-br from-purple-600 to-purple-500 p-6 rounded-xl text-center transition-all shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/70 transform hover:scale-105"
-          >
-            <div className="text-3xl mb-2">💬</div>
-            <p className="font-medium">Messages</p>
-          </a>
-          <a
-            href="/games"
-            className="bg-gradient-to-br from-green-600 to-green-500 p-6 rounded-xl text-center transition-all shadow-lg shadow-green-500/50 hover:shadow-xl hover:shadow-green-500/70 transform hover:scale-105"
-          >
-            <div className="text-3xl mb-2">🎮</div>
-            <p className="font-medium">Mes Jeux</p>
-          </a>
-        </div>
       </div>
     </div>
   );

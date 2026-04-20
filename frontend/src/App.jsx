@@ -32,9 +32,9 @@ function App() {
       <AuthProvider>
         <ToastProvider>
           <Router>
-            <div className="min-h-screen bg-gray-900 dark:bg-gray-900 light:bg-gray-100 flex flex-col transition-colors duration-300">
+            <div className="min-h-screen bg-slate-50 dark:bg-gaming-dark flex flex-col transition-colors duration-300">
               <Navigation />
-              <main className="flex-grow">
+              <main className="flex-grow pt-24">
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/login" element={<Login />} />
