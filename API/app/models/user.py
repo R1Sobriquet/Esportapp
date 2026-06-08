@@ -88,6 +88,12 @@ class UserProfile(BaseModel):
         max_length=100,
         description="User's region (e.g., Europe, NA)"
     )
+    # GC-EVOL-T2 : pays d'origine du joueur (Besoin 1 — page d'accueil/profil)
+    country: Optional[str] = Field(
+        None,
+        max_length=100,
+        description="User's country of origin (e.g., France, Canada)"
+    )
     date_of_birth: Optional[str] = Field(
         None,
         description="Date of birth in YYYY-MM-DD format"
@@ -239,6 +245,8 @@ class UserProfileResponse(BaseModel):
     username: str
     email: Optional[str] = None
     region: Optional[str] = None
+    # GC-EVOL-T2 : pays renvoyé dans la réponse profil (Besoin 1)
+    country: Optional[str] = None
     date_of_birth: Optional[str] = None
     avatar_url: Optional[str] = None
     banner_url: Optional[str] = None

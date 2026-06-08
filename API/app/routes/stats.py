@@ -62,12 +62,18 @@ def get_popular_players(limit: int = Query(default=6, le=20)):
     Returns players with most accepted matches.
     """
     with DatabaseSession(dict_cursor=True) as db:
+        # GC-EVOL-T5 : ajout de u.created_at (année d'inscription) et p.country
+        # (pays) au SELECT pour la page d'accueil. ATTENTION : ces deux colonnes
+        # non-agrégées doivent être répétées dans le GROUP BY (sinon MySQL plante
+        # avec ONLY_FULL_GROUP_BY). p.skill_level était déjà présent.
         db.execute("""
             SELECT
                 u.id,
                 u.username,
+                u.created_at,
                 p.avatar_url,
                 p.skill_level,
+                p.country,
                 p.bio,
                 COUNT(DISTINCT m.id) as match_count,
                 GROUP_CONCAT(DISTINCT g.name ORDER BY g.name SEPARATOR ', ') as games
@@ -80,13 +86,18 @@ def get_popular_players(limit: int = Query(default=6, le=20)):
             LEFT JOIN user_games ug ON u.id = ug.user_id AND ug.is_favorite = 1
             LEFT JOIN games g ON ug.game_id = g.id
             WHERE p.profile_visibility = 'public' OR p.profile_visibility IS NULL
-            GROUP BY u.id, u.username, p.avatar_url, p.skill_level, p.bio
+            GROUP BY u.id, u.username, u.created_at, p.avatar_url, p.skill_level, p.country, p.bio
             HAVING match_count > 0
             ORDER BY match_count DESC, u.username ASC
             LIMIT %s
         """, (limit,))
 
         players = db.fetchall()
+
+        # GC-EVOL-T5 : created_at -> chaîne ISO (sérialisable JSON), comme last_active
+        for player in players:
+            if player.get("created_at"):
+                player["created_at"] = player["created_at"].isoformat()
 
         return {"players": players}
 
@@ -99,12 +110,16 @@ def get_recently_active_players(limit: int = Query(default=6, le=20)):
     Returns players who logged in recently.
     """
     with DatabaseSession(dict_cursor=True) as db:
+        # GC-EVOL-T5 : u.created_at + p.country ajoutés au SELECT et au GROUP BY
+        # (piège ONLY_FULL_GROUP_BY). MAX(a.created_at) reste agrégé (last_active).
         db.execute("""
             SELECT
                 u.id,
                 u.username,
+                u.created_at,
                 p.avatar_url,
                 p.skill_level,
+                p.country,
                 p.bio,
                 MAX(a.created_at) as last_active,
                 GROUP_CONCAT(DISTINCT g.name ORDER BY g.name SEPARATOR ', ') as games
@@ -115,7 +130,7 @@ def get_recently_active_players(limit: int = Query(default=6, le=20)):
             LEFT JOIN games g ON ug.game_id = g.id
             WHERE (p.profile_visibility = 'public' OR p.profile_visibility IS NULL)
             AND a.created_at > DATE_SUB(NOW(), INTERVAL 7 DAY)
-            GROUP BY u.id, u.username, p.avatar_url, p.skill_level, p.bio
+            GROUP BY u.id, u.username, u.created_at, p.avatar_url, p.skill_level, p.country, p.bio
             ORDER BY last_active DESC
             LIMIT %s
         """, (limit,))
@@ -123,9 +138,12 @@ def get_recently_active_players(limit: int = Query(default=6, le=20)):
         players = db.fetchall()
 
         # Format last_active as relative time
+        # GC-EVOL-T5 : created_at également converti en ISO (année d'inscription).
         for player in players:
             if player.get("last_active"):
                 player["last_active"] = player["last_active"].isoformat()
+            if player.get("created_at"):
+                player["created_at"] = player["created_at"].isoformat()
 
         return {"players": players}
 
@@ -138,12 +156,16 @@ def get_top_matchers(limit: int = Query(default=6, le=20)):
     Returns top players by total match count.
     """
     with DatabaseSession(dict_cursor=True) as db:
+        # GC-EVOL-T5 : u.created_at + p.country ajoutés au SELECT et au GROUP BY
+        # (piège ONLY_FULL_GROUP_BY).
         db.execute("""
             SELECT
                 u.id,
                 u.username,
+                u.created_at,
                 p.avatar_url,
                 p.skill_level,
+                p.country,
                 p.bio,
                 COUNT(DISTINCT m.id) as match_count,
                 SUM(CASE WHEN m.status = 'accepted' THEN 1 ELSE 0 END) as accepted_count,
@@ -154,13 +176,18 @@ def get_top_matchers(limit: int = Query(default=6, le=20)):
             LEFT JOIN user_games ug ON u.id = ug.user_id AND ug.is_favorite = 1
             LEFT JOIN games g ON ug.game_id = g.id
             WHERE p.profile_visibility = 'public' OR p.profile_visibility IS NULL
-            GROUP BY u.id, u.username, p.avatar_url, p.skill_level, p.bio
+            GROUP BY u.id, u.username, u.created_at, p.avatar_url, p.skill_level, p.country, p.bio
             HAVING match_count > 0
             ORDER BY accepted_count DESC, match_count DESC
             LIMIT %s
         """, (limit,))
 
         players = db.fetchall()
+
+        # GC-EVOL-T5 : created_at -> chaîne ISO (année d'inscription).
+        for player in players:
+            if player.get("created_at"):
+                player["created_at"] = player["created_at"].isoformat()
 
         return {"players": players}
 

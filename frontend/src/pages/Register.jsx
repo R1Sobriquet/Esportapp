@@ -19,6 +19,7 @@ export default function Register() {
     confirmPassword: '',
     // Profile info
     region: '',
+    country: '', // GC-EVOL-T9 : pays d'origine (Besoin 1)
     date_of_birth: '',
     bio: '',
     discord_username: '',
@@ -70,6 +71,7 @@ export default function Register() {
       password: formData.password,
       profile: {
         region: formData.region,
+        country: formData.country, // GC-EVOL-T9
         date_of_birth: formData.date_of_birth,
         bio: formData.bio,
         discord_username: formData.discord_username,
@@ -229,6 +231,23 @@ export default function Register() {
                   onChange={handleChange}
                   className="mt-1 block w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent transition-all"
                   placeholder="ex: Europe, NA, Asie"
+                />
+              </div>
+
+              {/* GC-EVOL-T9 : champ Pays à l'inscription (étape 2) */}
+              <div>
+                <label htmlFor="country" className="block text-sm font-medium text-gray-300">
+                  Pays
+                </label>
+                <input
+                  id="country"
+                  name="country"
+                  type="text"
+                  value={formData.country}
+                  onChange={handleChange}
+                  maxLength={100}
+                  className="mt-1 block w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent transition-all"
+                  placeholder="ex: France, Canada, Maroc"
                 />
               </div>
 
