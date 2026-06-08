@@ -235,6 +235,14 @@ def test_get_profile():
             print_info(f"Region: {profile.get('region')}")
             print_info(f"Skill Level: {profile.get('skill_level')}")
             print_info(f"Looking For: {profile.get('looking_for')}")
+
+            # GC-EVOL-T10 : le champ `country` doit être présent dans la réponse
+            # profil (clé renvoyée par get_profile, même si la valeur est NULL).
+            if "country" in profile:
+                print_success(f"Profile contient le champ 'country': {profile.get('country')}")
+            else:
+                print_error("Le champ 'country' est absent de la réponse profil")
+                return False
             return True
         else:
             print_error(f"Failed to get profile: {response.status_code}")
@@ -373,6 +381,99 @@ def test_add_user_game():
         print_error(f"Error: {e}")
         return False
 
+def test_get_message_categories():
+    """
+    GC-EVOL-T10 : Test de l'endpoint public GET /messages/categories
+
+    Returns:
+        bool: True si les 4 catégories de base sont renvoyées, False sinon
+
+    Intérêt : Valide la table de référence message_categories (Besoin 2 —
+    catégorisation des messages) et l'endpoint public qui l'expose.
+    """
+    print_header("Testing Get Message Categories")
+
+    try:
+        # Endpoint public : aucune authentification requise
+        response = requests.get(f"{API_URL}/messages/categories")
+
+        if response.status_code == 200:
+            data = response.json()
+            categories = data.get("categories", [])
+            print_success(f"Retrieved {len(categories)} message categories")
+
+            # Affichage des catégories pour le debugging
+            for cat in categories:
+                print_info(f"  - {cat.get('name')} (slug: {cat.get('slug')}, color: {cat.get('color')})")
+
+            # Les 4 catégories de base de la migration 005 doivent être présentes
+            slugs = {cat.get("slug") for cat in categories}
+            expected = {"strategie", "commerce", "general", "humour"}
+            if expected.issubset(slugs):
+                print_success("Les 4 catégories de base sont présentes")
+                return True
+            else:
+                print_error(f"Catégories manquantes : {expected - slugs}")
+                return False
+        else:
+            print_error(f"Failed to get categories: {response.status_code}")
+            print_error(response.text)
+            return False
+    except Exception as e:
+        print_error(f"Error: {e}")
+        return False
+
+
+def test_send_message_with_category():
+    """
+    GC-EVOL-T10 : Test d'envoi d'un message AVEC une catégorie (category_id)
+
+    Returns:
+        bool: True si le payload (avec category_id) est accepté par l'API
+
+    Intérêt : Valide que le modèle Message accepte le champ optionnel
+    category_id et que l'endpoint l'intègre. Comme l'utilisateur de test
+    n'a pas de match accepté, on attend un 403 (règle métier "matched users")
+    et NON un 422 (erreur de validation), ce qui prouverait que category_id
+    est bien reconnu par le modèle Pydantic.
+    """
+    print_header("Testing Send Message With Category")
+
+    if not TOKEN:
+        print_error("No token available. Skipping send-message test.")
+        return False
+
+    headers = {"Authorization": f"Bearer {TOKEN}"}
+
+    # On cible un destinataire avec lequel il n'y a pas de match accepté.
+    payload = {
+        "receiver_id": 999999,  # destinataire improbable -> pas de match
+        "content": "Message catégorisé de test",
+        "category_id": 1,       # GC-EVOL : catégorie "strategie" (id 1)
+    }
+
+    try:
+        response = requests.post(f"{API_URL}/messages", json=payload, headers=headers)
+
+        # 422 = le champ category_id n'est pas accepté par le modèle (échec).
+        if response.status_code == 422:
+            print_error("category_id rejeté par la validation (422) — modèle non à jour")
+            print_error(response.text)
+            return False
+
+        # 403 attendu (pas de match) OU 200 (si un match existait) : payload accepté.
+        if response.status_code in (200, 403):
+            print_success(f"Payload avec category_id accepté (status {response.status_code})")
+            return True
+
+        print_error(f"Statut inattendu: {response.status_code}")
+        print_error(response.text)
+        return False
+    except Exception as e:
+        print_error(f"Error: {e}")
+        return False
+
+
 def test_find_matches():
     """
     Test du système de matching pour trouver des coéquipiers compatibles
@@ -445,6 +546,9 @@ def run_all_tests():
         ("Update Profile", test_update_profile),  # Modification des données
         ("Get Games", test_get_games),            # Accès aux données de référence
         ("Add User Game", test_add_user_game),    # Personnalisation du profil
+        # GC-EVOL-T10 : tests des nouvelles fonctionnalités (catégories messages)
+        ("Get Message Categories", test_get_message_categories),  # Table de référence
+        ("Send Message With Category", test_send_message_with_category),  # category_id accepté
         ("Find Matches", test_find_matches),      # Fonctionnalité de matching
     ]
     

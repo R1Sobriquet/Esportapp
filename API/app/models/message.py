@@ -12,6 +12,9 @@ class Message(BaseModel):
 
     receiver_id: int
     content: str
+    # GC-EVOL-T2 : catégorie facultative du message (FK vers message_categories).
+    # NULL autorisé => un message peut rester « sans catégorie ».
+    category_id: Optional[int] = None
 
 
 class MessageResponse(BaseModel):
@@ -25,6 +28,12 @@ class MessageResponse(BaseModel):
     created_at: datetime
     sender_username: Optional[str] = None
     sender_avatar: Optional[str] = None
+    # GC-EVOL-T2 : infos de catégorie jointes depuis message_categories
+    # (renseignées via LEFT JOIN dans get_messages ; NULL si non catégorisé).
+    category_id: Optional[int] = None
+    category_name: Optional[str] = None
+    category_slug: Optional[str] = None
+    category_color: Optional[str] = None
 
 
 class ConversationResponse(BaseModel):

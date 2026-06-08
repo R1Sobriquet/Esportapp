@@ -23,9 +23,17 @@ export default function Messages() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
+  // GC-EVOL-T7 : état des catégories (liste de référence), catégorie choisie
+  // pour l'envoi, et filtre actif (slug) au-dessus du fil de discussion.
+  const [categories, setCategories] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState('');
+  const [activeFilter, setActiveFilter] = useState(null);
   const messagesEndRef = useRef(null);
 
   useEffect(() => { if (user) loadConversations(); }, [user]);
+
+  // GC-EVOL-T7 : charge les catégories une fois au montage (sélecteur + filtres)
+  useEffect(() => { loadCategories(); }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -34,15 +42,16 @@ export default function Messages() {
     if (userId && username) initiateConversation(parseInt(userId), username);
   }, [location.search, conversations]);
 
+  // GC-EVOL-T7 : recharge le fil quand la conversation OU le filtre catégorie change
   useEffect(() => {
     if (selectedConversation) {
-      loadMessages(selectedConversation.user_id);
+      loadMessages(selectedConversation.user_id, activeFilter);
       // On mobile, hide sidebar when conversation is selected
       if (window.innerWidth < 768) {
         setShowSidebar(false);
       }
     }
-  }, [selectedConversation]);
+  }, [selectedConversation, activeFilter]);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
@@ -58,6 +67,17 @@ export default function Messages() {
     }
   };
 
+  // GC-EVOL-T7 : charge la liste de référence des catégories de messages
+  const loadCategories = async () => {
+    try {
+      const response = await messagesAPI.getCategories();
+      setCategories(response.data.categories || []);
+    } catch (err) {
+      // Non bloquant : l'envoi reste possible sans catégorie
+      console.error('Failed to load categories:', err);
+    }
+  };
+
   const initiateConversation = (userId, username) => {
     const existing = conversations.find(c => c.user_id === userId);
     if (existing) {
@@ -68,10 +88,11 @@ export default function Messages() {
     }
   };
 
-  const loadMessages = async (userId) => {
+  // GC-EVOL-T7 : `filter` (slug) optionnel transmis à l'API pour filtrer le fil
+  const loadMessages = async (userId, filter = null) => {
     setLoadingMessages(true);
     try {
-      const response = await messagesAPI.getMessages(userId);
+      const response = await messagesAPI.getMessages(userId, filter);
       setMessages(response.data.messages);
     } catch (err) {
       if (err.response?.status === 403) {
@@ -89,6 +110,9 @@ export default function Messages() {
     if (!newMessage.trim() || !selectedConversation || sending) return;
     setSending(true);
 
+    // GC-EVOL-T7 : catégorie choisie pour ce message (peut être vide => null)
+    const chosenCategory = categories.find(c => String(c.id) === String(selectedCategoryId));
+
     // Optimistic update
     const tempId = Date.now();
     const optimisticMessage = {
@@ -97,13 +121,22 @@ export default function Messages() {
       sender_id: user.id,
       created_at: new Date().toISOString(),
       pending: true,
+      // GC-EVOL-T7 : on injecte les infos de catégorie pour afficher le badge
+      // immédiatement (mise à jour optimiste), avant le retour de l'API.
+      category_id: chosenCategory ? chosenCategory.id : null,
+      category_name: chosenCategory ? chosenCategory.name : null,
+      category_color: chosenCategory ? chosenCategory.color : null,
     };
     setMessages(prev => [...prev, optimisticMessage]);
     const messageText = newMessage.trim();
     setNewMessage('');
 
     try {
-      const response = await messagesAPI.sendMessage(selectedConversation.user_id, messageText);
+      const response = await messagesAPI.sendMessage(
+        selectedConversation.user_id,
+        messageText,
+        chosenCategory ? chosenCategory.id : null,
+      );
       // Replace optimistic message with real one
       setMessages(prev => prev.map(m => m.id === tempId ? response.data.message : m));
 
@@ -270,6 +303,38 @@ export default function Messages() {
                 </div>
               </div>
 
+              {/* GC-EVOL-T7 : Barre de filtres par catégorie (onglets "Tous" + 1 par catégorie) */}
+              {categories.length > 0 && (
+                <div className="flex gap-2 overflow-x-auto px-4 py-2 bg-gray-900/40 border-b border-primary/10">
+                  <button
+                    type="button"
+                    onClick={() => setActiveFilter(null)}
+                    className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-all border ${
+                      activeFilter === null
+                        ? 'bg-gradient-primary text-white border-primary-light shadow-glow-red'
+                        : 'bg-gray-800/60 text-gray-300 border-primary/20 hover:border-primary-light/40'
+                    }`}
+                  >
+                    Tous
+                  </button>
+                  {categories.map(cat => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setActiveFilter(cat.slug)}
+                      className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-all border ${
+                        activeFilter === cat.slug
+                          ? 'text-white border-transparent shadow-lg'
+                          : 'bg-gray-800/60 text-gray-300 border-primary/20 hover:border-primary-light/40'
+                      }`}
+                      style={activeFilter === cat.slug ? { backgroundColor: cat.color } : undefined}
+                    >
+                      {cat.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {loadingMessages ? (
@@ -306,6 +371,15 @@ export default function Messages() {
                             }
                             ${msg.pending ? 'opacity-70' : ''}
                           `}>
+                            {/* GC-EVOL-T7 : badge coloré de catégorie (si le message en a une) */}
+                            {msg.category_name && (
+                              <span
+                                className="inline-block mb-1 px-2 py-0.5 rounded-full text-[10px] font-medium text-white"
+                                style={{ backgroundColor: msg.category_color || '#AD2831' }}
+                              >
+                                {msg.category_name}
+                              </span>
+                            )}
                             <p className="text-sm break-words">{msg.content}</p>
                           </div>
                           <div className={`flex items-center gap-1 mt-1 ${mine ? 'justify-end' : 'justify-start'}`}>
@@ -325,6 +399,20 @@ export default function Messages() {
               {/* Input */}
               <form onSubmit={sendMessage} className="p-4 bg-gradient-to-r from-gray-900/80 to-gray-800/80 backdrop-blur-sm border-t border-primary/20">
                 <div className="flex gap-2">
+                  {/* GC-EVOL-T7 : sélecteur de catégorie pour le message envoyé */}
+                  {categories.length > 0 && (
+                    <select
+                      value={selectedCategoryId}
+                      onChange={(e) => setSelectedCategoryId(e.target.value)}
+                      aria-label="Catégorie du message"
+                      className="px-2 py-3 bg-gray-900/80 border border-primary/20 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-light transition-all max-w-[40%]"
+                    >
+                      <option value="">Catégorie…</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                  )}
                   <input
                     type="text"
                     value={newMessage}

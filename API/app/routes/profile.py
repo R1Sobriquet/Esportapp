@@ -26,7 +26,7 @@ def get_profile(user_id: int = Depends(get_current_user_id)):
             """
             SELECT
                 u.id, u.username, u.email, u.created_at,
-                p.region, p.date_of_birth, p.avatar_url,
+                p.region, p.country, p.date_of_birth, p.avatar_url,
                 p.bio, p.timezone, p.discord_username,
                 p.steam_id, p.twitch_username, p.skill_level, p.looking_for,
                 p.profile_visibility, p.show_stats, p.allow_friend_requests
@@ -82,10 +82,13 @@ def update_profile(profile_data: UserProfile, user_id: int = Depends(get_current
     Updates profile fields with the provided data.
     """
     with DatabaseSession() as db:
+        # GC-EVOL-T4 : `country` ajouté au SELECT (get_profile) et à l'UPDATE.
+        # L'ordre des colonnes du SET doit rester aligné avec le tuple de params.
         db.execute(
             """
             UPDATE user_profiles SET
                 region = %s,
+                country = %s,
                 date_of_birth = %s,
                 avatar_url = %s,
                 bio = %s,
@@ -102,6 +105,7 @@ def update_profile(profile_data: UserProfile, user_id: int = Depends(get_current
             """,
             (
                 profile_data.region,
+                profile_data.country,  # GC-EVOL-T4
                 profile_data.date_of_birth,
                 profile_data.avatar_url,
                 profile_data.bio,

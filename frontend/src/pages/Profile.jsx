@@ -493,6 +493,20 @@ export default function Profile() {
                   />
                 </div>
 
+                {/* GC-EVOL-T9 : champ Pays (édition) — lié à editForm.country */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Pays</label>
+                  <input
+                    type="text"
+                    name="country"
+                    value={editForm.country || ''}
+                    onChange={handleEditChange}
+                    placeholder="ex: France, Canada, Maroc"
+                    maxLength={100}
+                    className="w-full px-3 py-2 bg-gray-900/80 border border-primary/20 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary-light transition-all"
+                  />
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Date de naissance</label>
                   <input
@@ -715,13 +729,20 @@ export default function Profile() {
                       <span className="text-white">{profile.region}</span>
                     </div>
                   )}
+                  {/* GC-EVOL-T9 : pays affiché en lecture seule (si renseigné) */}
+                  {profile.country && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-gray-400">🌍</span>
+                      <span className="text-white">{profile.country}</span>
+                    </div>
+                  )}
                   {profile.timezone && (
                     <div className="flex items-center gap-3">
                       <span className="text-gray-400">🕐</span>
                       <span className="text-white">{profile.timezone}</span>
                     </div>
                   )}
-                  {!profile.region && !profile.timezone && (
+                  {!profile.region && !profile.country && !profile.timezone && (
                     <p className="text-gray-500 text-sm">Aucune information ajoutée</p>
                   )}
                 </div>

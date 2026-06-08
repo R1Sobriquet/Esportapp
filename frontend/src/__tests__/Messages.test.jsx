@@ -20,6 +20,8 @@ jest.mock('../services', () => ({
     getMessages: jest.fn(),
     sendMessage: jest.fn(),
     deleteMessage: jest.fn(),
+    // GC-EVOL-T10 : mock du nouvel endpoint de catégories
+    getCategories: jest.fn(),
   },
 }));
 
@@ -102,7 +104,15 @@ beforeEach(() => {
     },
   });
   messagesAPI.deleteMessage.mockResolvedValue({ data: { success: true, message: 'Message deleted' } });
+  // GC-EVOL-T10 : par défaut, aucune catégorie (sélecteur/filtres masqués)
+  messagesAPI.getCategories.mockResolvedValue({ data: { categories: [] } });
 });
+
+// GC-EVOL-T10 : jeu de catégories de test (réutilisé par le Groupe 4)
+const CATEGORIES = [
+  { id: 1, name: 'Stratégie / Conseils', slug: 'strategie', color: '#640D14' },
+  { id: 2, name: 'Général',              slug: 'general',   color: '#AD2831' },
+];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -135,7 +145,8 @@ describe('Groupe 1 — Envoi de messages', () => {
     await act(async () => {
       fireEvent.click(screen.getByText('Bob'));
     });
-    await waitFor(() => expect(messagesAPI.getMessages).toHaveBeenCalledWith(2));
+    // GC-EVOL-T7 : getMessages reçoit désormais le filtre catégorie (null par défaut)
+    await waitFor(() => expect(messagesAPI.getMessages).toHaveBeenCalledWith(2, null));
 
     // Saisir et envoyer un message
     const input = screen.getByPlaceholderText(/Écrire à Bob/);
@@ -148,7 +159,9 @@ describe('Groupe 1 — Envoi de messages', () => {
       fireEvent.submit(form);
     });
 
-    expect(messagesAPI.sendMessage).toHaveBeenCalledWith(2, 'Hello Bob');
+    // GC-EVOL-T6 : sendMessage prend désormais un 3e argument (category_id),
+    // null par défaut quand aucune catégorie n'est sélectionnée.
+    expect(messagesAPI.sendMessage).toHaveBeenCalledWith(2, 'Hello Bob', null);
   });
 
   test('1.2 — Le bouton envoyer est désactivé quand l\'input est vide', async () => {
@@ -255,7 +268,8 @@ describe('Groupe 2 — Récupération des conversations et informations', () => 
       fireEvent.click(screen.getByText('Bob'));
     });
 
-    expect(messagesAPI.getMessages).toHaveBeenCalledWith(2);
+    // GC-EVOL-T7 : second argument = filtre catégorie (null quand aucun filtre)
+    expect(messagesAPI.getMessages).toHaveBeenCalledWith(2, null);
   });
 
   test('2.6 — Les messages s\'affichent dans l\'ordre chronologique', async () => {
@@ -385,5 +399,73 @@ describe('Groupe 3 — Suppression logique des messages (soft-delete)', () => {
 
     // 'Super !' ne doit pas apparaître dans la liste des conversations
     expect(screen.queryByText('Super !')).not.toBeInTheDocument();
+  });
+});
+
+// ─── Groupe 4 : Catégorisation des messages (GC-EVOL) ─────────────────────────
+
+describe('Groupe 4 — Catégorisation des messages', () => {
+  test('4.1 — getCategories est appelé au montage du composant', async () => {
+    messagesAPI.getCategories.mockResolvedValue({ data: { categories: CATEGORIES } });
+
+    await renderMessages();
+
+    await waitFor(() => expect(messagesAPI.getCategories).toHaveBeenCalledTimes(1));
+  });
+
+  test('4.2 — Un badge de catégorie s\'affiche sur un message catégorisé', async () => {
+    messagesAPI.getConversations.mockResolvedValue({ data: { conversations: CONVERSATIONS } });
+    // Message portant une catégorie (category_name + category_color)
+    messagesAPI.getMessages.mockResolvedValue({
+      data: {
+        messages: [
+          {
+            id: 20, sender_id: 2, receiver_id: 1, content: 'Plan de jeu',
+            is_read: true, created_at: '2026-04-10T09:00:00Z',
+            sender_username: 'Bob', sender_avatar: null,
+            category_id: 1, category_name: 'Stratégie / Conseils',
+            category_slug: 'strategie', category_color: '#640D14',
+          },
+        ],
+      },
+    });
+
+    await renderMessages();
+    await waitFor(() => expect(screen.getByText('Bob')).toBeInTheDocument());
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Bob'));
+    });
+
+    // Le badge (libellé de catégorie) doit apparaître sur la bulle
+    await waitFor(() => {
+      expect(screen.getByText('Stratégie / Conseils')).toBeInTheDocument();
+    });
+  });
+
+  test('4.3 — Le filtre par catégorie recharge les messages avec le slug', async () => {
+    messagesAPI.getConversations.mockResolvedValue({ data: { conversations: CONVERSATIONS } });
+    messagesAPI.getMessages.mockResolvedValue({ data: { messages: [] } });
+    messagesAPI.getCategories.mockResolvedValue({ data: { categories: CATEGORIES } });
+
+    await renderMessages();
+    await waitFor(() => expect(screen.getByText('Bob')).toBeInTheDocument());
+
+    // Ouvrir la conversation -> 1er chargement (sans filtre)
+    await act(async () => {
+      fireEvent.click(screen.getByText('Bob'));
+    });
+    await waitFor(() => expect(messagesAPI.getMessages).toHaveBeenCalledWith(2, null));
+
+    // Cliquer sur l'onglet de filtre "Stratégie / Conseils"
+    const filterButton = screen.getByRole('button', { name: 'Stratégie / Conseils' });
+    await act(async () => {
+      fireEvent.click(filterButton);
+    });
+
+    // Le fil est rechargé en passant le slug de la catégorie à l'API
+    await waitFor(() =>
+      expect(messagesAPI.getMessages).toHaveBeenCalledWith(2, 'strategie')
+    );
   });
 });

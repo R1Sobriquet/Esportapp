@@ -3,6 +3,8 @@ Messages routes.
 Handles conversations and messaging between matched users.
 """
 
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException, Depends
 
 from ..models.message import Message
@@ -10,6 +12,31 @@ from ..services.auth import get_current_user_id
 from ..database import DatabaseSession
 
 router = APIRouter()
+
+
+# =====================================================================
+# GC-EVOL-T3 : Catégories de messages — endpoint public
+# =====================================================================
+# Renvoie la table de référence message_categories (Besoin 2).
+# Public : pas besoin d'un match accepté, le front en a besoin pour
+# alimenter le sélecteur de catégorie et la barre de filtres.
+@router.get("/messages/categories")
+def get_message_categories():
+    """
+    Liste toutes les catégories de messages disponibles.
+
+    Endpoint public — utilisé par le front pour le sélecteur d'envoi
+    et la barre de filtres. Triées par id (ordre d'insertion).
+    """
+    with DatabaseSession(dict_cursor=True) as db:
+        db.execute(
+            """
+            SELECT id, name, slug, color
+            FROM message_categories
+            ORDER BY id ASC
+            """
+        )
+        return {"categories": db.fetchall()}
 
 
 @router.get("/messages")
@@ -52,7 +79,11 @@ def get_conversations(user_id: int = Depends(get_current_user_id)):
 
 
 @router.get("/messages/{other_user_id}")
-def get_messages(other_user_id: int, user_id: int = Depends(get_current_user_id)):
+def get_messages(
+    other_user_id: int,
+    category: Optional[str] = None,
+    user_id: int = Depends(get_current_user_id),
+):
     """
     Get messages between current user and another user.
 
@@ -60,6 +91,8 @@ def get_messages(other_user_id: int, user_id: int = Depends(get_current_user_id)
 
     Args:
         other_user_id: The ID of the other user in the conversation
+        category: GC-EVOL-T3 — slug de catégorie optionnel pour filtrer
+                  le fil (ex: "strategie"). Si absent, tous les messages.
 
     Returns:
         List of messages in the conversation
@@ -78,9 +111,18 @@ def get_messages(other_user_id: int, user_id: int = Depends(get_current_user_id)
         if not db.fetchone():
             raise HTTPException(status_code=403, detail="You can only message matched users")
 
+        # GC-EVOL-T3 : LEFT JOIN sur message_categories pour récupérer le
+        # libellé/slug/couleur de la catégorie (NULL si message non catégorisé).
+        # Le filtre optionnel `category` (slug) est ajouté dynamiquement.
+        params = [user_id, other_user_id, other_user_id, user_id]
+        category_filter = ""
+        if category:
+            category_filter = " AND mc.slug = %s"
+            params.append(category)
+
         # Get messages — exclut les messages supprimés logiquement
         db.execute(
-            """
+            f"""
             SELECT
                 m.id,
                 m.sender_id,
@@ -88,17 +130,23 @@ def get_messages(other_user_id: int, user_id: int = Depends(get_current_user_id)
                 m.content,
                 m.is_read,
                 m.created_at,
+                m.category_id,
+                mc.name AS category_name,
+                mc.slug AS category_slug,
+                mc.color AS category_color,
                 u.username as sender_username,
                 p.avatar_url as sender_avatar
             FROM messages m
             JOIN users u ON m.sender_id = u.id
             JOIN user_profiles p ON u.id = p.user_id
+            LEFT JOIN message_categories mc ON m.category_id = mc.id
             WHERE ((m.sender_id = %s AND m.receiver_id = %s)
                OR (m.sender_id = %s AND m.receiver_id = %s))
                AND m.deleted_at IS NULL
+               {category_filter}
             ORDER BY m.created_at ASC
             """,
-            (user_id, other_user_id, other_user_id, user_id),
+            tuple(params),
         )
 
         messages = db.fetchall()
@@ -142,12 +190,13 @@ def send_message(message: Message, user_id: int = Depends(get_current_user_id)):
             raise HTTPException(status_code=403, detail="You can only message matched users")
 
         # Insert the message
+        # GC-EVOL-T3 : on persiste category_id (peut être NULL si non fourni).
         db.execute(
             """
-            INSERT INTO messages (sender_id, receiver_id, content, is_read)
-            VALUES (%s, %s, %s, FALSE)
+            INSERT INTO messages (sender_id, receiver_id, content, category_id, is_read)
+            VALUES (%s, %s, %s, %s, FALSE)
             """,
-            (user_id, message.receiver_id, message.content),
+            (user_id, message.receiver_id, message.content, message.category_id),
         )
 
         return {"success": True, "message": "Message sent"}

@@ -50,9 +50,25 @@ const PlayerCard = ({ player, index, variant = 'default' }) => {
           <p className="text-xs text-gray-400 truncate">
             {player.games || 'Aucun jeu favori'}
           </p>
+          {/* GC-EVOL-T8 : niveau de compétence (déjà présent) */}
           {player.skill_level && (
             <span className="text-xs text-primary-light">{player.skill_level}</span>
           )}
+          {/* GC-EVOL-T8 : année d'inscription + pays d'origine (Besoin 1).
+              created_at vient des endpoints stats ; on extrait l'année.
+              Le pays n'est affiché que s'il est renseigné (null géré). */}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+            {player.created_at && (
+              <span className="text-[11px] text-gray-500">
+                Membre depuis {new Date(player.created_at).getFullYear()}
+              </span>
+            )}
+            {player.country && (
+              <span className="text-[11px] text-gray-400 flex items-center gap-0.5">
+                <span>🌍</span> {player.country}
+              </span>
+            )}
+          </div>
         </div>
       </div>
       {(player.match_count !== undefined || player.accepted_count !== undefined) && (
